@@ -102,17 +102,18 @@ def summary(title, posts, more=''):
     return article(title, ''.join(rows), footer)
 
 
-def card_summary(title_text, posts, more='', kind=''):
+def card_summary(title_text, posts, more='', kind='', show_date=False):
     cards = []
     for page in posts:
         title, url = escape(page['title']), page['url']
         tags = ''.join(f'<span>{escape(tag)}</span>' for tag in page.get('tags', [])
                        if tag.lower() != 'highlights')
         action = 'View project' if 'Projects' in page['categories'] else 'Read article'
+        card_date = date_html(page) if show_date else ''
         cards.append(f'<div class="highlight-card"><a class="highlight-image" href="{url}">'
                      f'<img src="{escape(page["thumbnail"])}" class="nofancybox" alt="" /></a>'
                      f'<div class="highlight-card-content"><div class="highlight-tags">{tags}</div>'
-                     f'<h2><a href="{url}">{title}</a></h2>{date_html(page)}'
+                     f'<h2><a href="{url}">{title}</a></h2>{card_date}'
                      f'<p>{escape(page["description"])}</p>'
                      f'<a class="highlight-link" href="{url}">{action} <span aria-hidden="true">&rarr;</span></a>'
                      f'</div></div>')
@@ -188,7 +189,7 @@ def build():
                 body += card_summary('Highlights', highlighted, kind='highlights')
             body += summary('Writing', groups['Writing'][:3], '/writing/')
         elif layout in ('writing', 'projects'):
-            body = (card_summary(page['title'], groups['Projects'], kind='project-cards')
+            body = (card_summary(page['title'], groups['Projects'], kind='project-cards', show_date=True)
                     if layout == 'projects' else summary(page['title'], groups['Writing']))
         elif layout:
             raise ValueError(f'{page["source"]}: unknown layout {layout!r}')
