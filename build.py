@@ -102,6 +102,25 @@ def summary(title, posts, more=''):
     return article(title, ''.join(rows), footer)
 
 
+def card_summary(title_text, posts, more='', kind=''):
+    cards = []
+    for page in posts:
+        title, url = escape(page['title']), page['url']
+        tags = ''.join(f'<span>{escape(tag)}</span>' for tag in page.get('tags', [])
+                       if tag.lower() != 'highlights')
+        action = 'View project' if 'Projects' in page['categories'] else 'Read article'
+        cards.append(f'<div class="highlight-card"><a class="highlight-image" href="{url}">'
+                     f'<img src="{escape(page["thumbnail"])}" class="nofancybox" alt="" /></a>'
+                     f'<div class="highlight-card-content"><div class="highlight-tags">{tags}</div>'
+                     f'<h2><a href="{url}">{title}</a></h2>{date_html(page)}'
+                     f'<p>{escape(page["description"])}</p>'
+                     f'<a class="highlight-link" href="{url}">{action} <span aria-hidden="true">&rarr;</span></a>'
+                     f'</div></div>')
+    footer = f'<div style="float:right"><a href="{more}">Read More</a></div>' if more else None
+    return article(title_text, '<div class="highlight-grid">' + ''.join(cards) + '</div>',
+                   footer=footer, kind=f'card-list {kind}'.rstrip())
+
+
 def widget(title, posts):
     items = ''.join(f'<li><a href="{p["url"]}">{escape(p["title"])}</a></li>' for p in posts)
     return f'<div class="widget tag"><h3 class="title">{title}</h3><ul class="entry">{items}</ul></div>'
@@ -111,6 +130,7 @@ def build():
     pages = [read_page(p) for p in sorted(SOURCE.rglob('*.md'))]
     posts = sorted((p for p in pages if p['post']), key=lambda p: (p['date'], p['url']), reverse=True)
     groups = {name: [p for p in posts if name in p['categories']] for name in ('Writing', 'Projects')}
+    highlighted = [p for p in posts if any(tag.lower() == 'highlights' for tag in p.get('tags', []))]
     sidebar = widget('Projects', groups['Projects']) + widget('Writing', groups['Writing'])
     sidebar += '<div class="widget"><h3 class="title"><a href="/archives/">All posts</a></h3></div>'
     template = Template((ROOT / 'templates/page.html').read_text(encoding='utf-8'))
@@ -164,10 +184,12 @@ def build():
         layout = page.get('layout', '')
         if layout == 'home':
             body = article(page['title'], page['body'], footer=None, kind='home-intro')
+            if highlighted:
+                body += card_summary('Highlights', highlighted, kind='highlights')
             body += summary('Writing', groups['Writing'][:3], '/writing/')
-            body += summary('Projects', groups['Projects'], '/projects/')
         elif layout in ('writing', 'projects'):
-            body = summary(page['title'], groups[layout.title()])
+            body = (card_summary(page['title'], groups['Projects'], kind='project-cards')
+                    if layout == 'projects' else summary(page['title'], groups['Writing']))
         elif layout:
             raise ValueError(f'{page["source"]}: unknown layout {layout!r}')
         else:

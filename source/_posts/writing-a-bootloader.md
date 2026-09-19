@@ -1,7 +1,7 @@
 +++
 title = "Writing a Bootloader Part 1"
 date = 2017-10-13
-tags = ["OSdev", "C", "asm"]
+tags = ["OSdev", "C", "asm", "highlights"]
 categories = ["Writing"]
 thumbnail = "/2017/10/13/writing-a-bootloader/floppy.png"
 description = "This post describes how to write a simple Hello world bootloader"
@@ -73,4 +73,3 @@ Next Steps
 ----------
 
 Next we can start investigating getting into Protected Mode in [Part 2](/2017/10/16/writing-a-bootloader2/)!
-
