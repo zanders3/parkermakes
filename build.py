@@ -18,7 +18,7 @@ from image import thumbnail
 ROOT = Path(__file__).resolve().parent
 SOURCE, OUTPUT = ROOT / 'source', ROOT / 'public'
 TITLE = 'parkermakes.uk'
-SUBTITLE = "Alex Parker's Website"
+SUBTITLE = "Alex Parker's Projects and Writing"
 AUTHOR = 'Alex Parker'
 DESCRIPTION = "Alex Parker's Projects and Writing"
 SITE_URL = os.environ.get('SITE_URL', 'https://parkermakes.uk').rstrip('/')
@@ -150,7 +150,7 @@ def build():
         page['thumbnail'], page['thumbnail_dimensions'] = thumbnails[url]
 
     def render(url, title, body, description=DESCRIPTION, is_page=False, active_nav=''):
-        nav = {name: '' for name in ('home', 'projects', 'writing')}
+        nav = {name: '' for name in ('home', 'about', 'projects', 'writing')}
         if active_nav:
             nav[active_nav] = ' class="active" aria-current="page"'
         html = template.substitute(title=escape(title + ' | ' + SUBTITLE if title else SUBTITLE),
@@ -175,6 +175,8 @@ def build():
             body = article(page['title'], page['body'], footer, date_html(page, linked=True) if page['post'] else '',
                            'post' if page['post'] else 'page', 'title')
         active_nav = layout if layout in ('home', 'projects', 'writing') else ''
+        if page['url'] == '/about/':
+            active_nav = 'about'
         if page['post']:
             active_nav = next((name.lower() for name in ('Projects', 'Writing')
                                if name in page.get('categories', [])), '')

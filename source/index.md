@@ -1,12 +1,8 @@
 +++
-title = "Hi there!"
+title = "Alex Parker: Lead Engineer"
 layout = "home"
 +++
 
-I am a technical lead with over 15 years of experience across software engineering, systems architecture and team leadership. 
+I build and lead teams delivering large scale distributed systems, developer platforms and high performance software with over 15 years of experience spanning distributed services, games, graphics and low-level systems.
 
-As a lead engineer I gather business requirements, architect systems and grow and mentor teams. My work impacts beyond my own department influencing overall technical strategy and engineering practice across the organisation.
-
-I bring extensive experience across the entire technology stack; from full-stack web development and large scale distributed systems through high performance C++ gameplay, graphics and tools down to low level firmware and hardware debugging.
-
-I currently work at Media Molecule as a Lead Platform Engineer.
+In my free time I love to build and create things, whether that is small game project ideas, custom operating systems, gameboy emulators, custom embedded electronics and even quadruped robots.
