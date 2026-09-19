@@ -149,11 +149,15 @@ def build():
             thumbnails[url] = ('/' + path, dimensions)
         page['thumbnail'], page['thumbnail_dimensions'] = thumbnails[url]
 
-    def render(url, title, body, description=DESCRIPTION, is_page=False):
+    def render(url, title, body, description=DESCRIPTION, is_page=False, active_nav=''):
+        nav = {name: '' for name in ('home', 'portfolio', 'articles')}
+        if active_nav:
+            nav[active_nav] = ' class="active" aria-current="page"'
         html = template.substitute(title=escape(title + ' | ' + SUBTITLE if title else SUBTITLE),
                                    site_title=escape(TITLE), subtitle=escape(SUBTITLE), author=escape(AUTHOR),
                                    description=escape(description), year=dt.date.today().year,
-                                   canonical=escape(SITE_URL + url), body=body, sidebar='' if is_page else sidebar)
+                                   canonical=escape(SITE_URL + url), body=body, sidebar='' if is_page else sidebar,
+                                   **{f'nav_{name}': value for name, value in nav.items()})
         add(url.lstrip('/') + 'index.html', links(html, url))
 
     for page in pages:
@@ -170,8 +174,12 @@ def build():
             footer = ''.join(f'<div class="{key}">{escape(", ".join(page.get(key, [])))}</div>' for key in ('categories', 'tags') if page.get(key))
             body = article(page['title'], page['body'], footer, date_html(page, linked=True) if page['post'] else '',
                            'post' if page['post'] else 'page', 'title')
+        active_nav = layout if layout in ('home', 'portfolio', 'articles') else ''
+        if page['post']:
+            active_nav = next((name.lower() for name in ('portfolio', 'articles')
+                               if name in page.get('categories', [])), '')
         render(page['url'], '' if layout == 'home' else page['title'], body,
-               page.get('description', DESCRIPTION), not page['post'] and not layout)
+               page.get('description', DESCRIPTION), not page['post'] and not layout, active_nav)
     render('/archives/', 'All posts', summary('All posts', posts))
 
     feed = ET.Element('feed', xmlns='http://www.w3.org/2005/Atom')

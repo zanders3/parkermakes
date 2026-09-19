@@ -186,9 +186,17 @@ a:hover {
 }
 #headerinner #main-nav ul li a {
   display: block;
-  border-bottom: 2px solid;
+  border-bottom: 2px solid transparent;
   padding-left: 8px;
   padding-right: 8px;
+}
+#headerinner #main-nav ul li a:hover {
+  color: #258fb8;
+  border-bottom-color: #258fb8;
+}
+#headerinner #main-nav ul li a.active {
+  color: #258fb8;
+  border-bottom-color: #258fb8;
 }
 @media screen and (max-width: 740px) {
   #headerinner #main-nav ul li {

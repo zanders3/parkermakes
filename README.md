@@ -21,7 +21,7 @@ Create `source/_posts/my-post.md`:
 +++
 title = "My post"
 date = 2026-09-17
-categories = ["Articles"]
+categories = ["Writing"]
 tags = ["Python"]
 thumbnail = "/2026/09/17/my-post/photo.png"
 description = "A short description for the listing pages."
@@ -34,7 +34,7 @@ Write ordinary Markdown here.
 
 The `+++` block is TOML. Dates are unquoted; strings are quoted. Title,
 date, categories, thumbnail and description are required for posts. Tags
-are optional. Use `Articles` or `Portfolio` for the respective section;
+are optional. Use `Writing` or `Projects` for the respective section;
 all posts also appear in `/archives/`. Posts sort newest first.
 
 Put images and downloads in `source/_posts/my-post/`. The example is
