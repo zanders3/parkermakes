@@ -111,7 +111,7 @@ def build():
     pages = [read_page(p) for p in sorted(SOURCE.rglob('*.md'))]
     posts = sorted((p for p in pages if p['post']), key=lambda p: (p['date'], p['url']), reverse=True)
     groups = {name: [p for p in posts if name in p['categories']] for name in ('Writing', 'Projects')}
-    sidebar = widget('Projects', list(reversed(groups['Projects']))) + widget('Writing', groups['Writing'])
+    sidebar = widget('Projects', groups['Projects']) + widget('Writing', groups['Writing'])
     sidebar += '<div class="widget"><h3 class="title"><a href="/archives/">All posts</a></h3></div>'
     template = Template((ROOT / 'templates/page.html').read_text(encoding='utf-8'))
     outputs = {}
