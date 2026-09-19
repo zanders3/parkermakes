@@ -1,7 +1,9 @@
 +++
-title = "Alex Parker: Lead Engineer"
+title = "Alex Parker: Lead Software Engineer"
 layout = "home"
 +++
+
+![](/css/images/toplogo.png)
 
 I build and lead teams delivering large scale distributed systems, developer platforms and high performance software with over 15 years of experience spanning distributed services, games, graphics and low-level systems.
 

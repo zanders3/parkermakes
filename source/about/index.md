@@ -1,6 +1,6 @@
 +++
 title = "About"
-description = "Alex Parker - Lead Engineer"
+description = "Alex Parker: Lead Software Engineer"
 +++
 
 I love turning my hand to interesting and challenging problems and enjoy learning new things. I am often given the most challenging problems that cut across departments. I then either solve them myself or ensure the teams involved understand how to solve the problem. 

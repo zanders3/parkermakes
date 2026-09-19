@@ -163,7 +163,7 @@ def build():
     for page in pages:
         layout = page.get('layout', '')
         if layout == 'home':
-            body = article(page['title'], page['body'], footer=None)
+            body = article(page['title'], page['body'], footer=None, kind='home-intro')
             body += summary('Writing', groups['Writing'][:3], '/writing/')
             body += summary('Projects', groups['Projects'], '/projects/')
         elif layout in ('writing', 'projects'):

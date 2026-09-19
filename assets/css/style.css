@@ -447,6 +447,27 @@ article .entry video {
   height: auto;
   border: none;
 }
+.home-intro .post-content {
+  padding-right: 255px;
+}
+.home-intro .entry > p:first-child {
+  margin-top: 0;
+}
+.home-intro .entry > p:first-child img {
+  position: absolute;
+  right: 20px;
+  bottom: 0;
+}
+@media screen and (max-width: 500px) {
+  .home-intro .post-content {
+    padding-right: 20px;
+    padding-bottom: 185px;
+  }
+  .home-intro .entry > p:first-child img {
+    right: 50%;
+    transform: translateX(50%);
+  }
+}
 article .entry iframe {
   border: none;
 }
