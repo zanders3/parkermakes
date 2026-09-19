@@ -955,3 +955,33 @@ figure.highlight .code {
 figure.highlight .line {
   height: 20px;
 }
+pre .token-comment {
+  color: #6a737d;
+  font-style: italic;
+}
+pre .token-keyword {
+  color: #7b3f98;
+  font-weight: bold;
+}
+pre .token-type {
+  color: #1f6f8b;
+}
+pre .token-literal,
+pre .token-number {
+  color: #a04b00;
+}
+pre .token-string {
+  color: #2f6f44;
+}
+pre .token-preprocessor {
+  color: #8a5a00;
+}
+pre .token-directive,
+pre .token-builtin,
+pre .token-command {
+  color: #8a5a00;
+}
+pre .token-register,
+pre .token-variable {
+  color: #1f6f8b;
+}

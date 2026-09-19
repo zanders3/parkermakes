@@ -48,7 +48,17 @@ The homepage introduction is `source/index.md`. `layout = "home"`,
 Other files under `source/` are copied as static assets.
 
 Markdown supports headings, lists, links, images, fenced and indented code,
-and raw HTML. Image alt text becomes a caption. Code uses plain styled boxes.
+and raw HTML. Image alt text becomes a caption. Labelled C, C++, C#, shell,
+GNU linker script and NASM fences receive build-time syntax highlighting;
+common labels include `c`, `cpp`, `c++`, `csharp`, `cs`, `sh`, `ld` and `nasm`.
+Unlabelled and unsupported code remains plain:
+
+````markdown
+```csharp
+public static void Main() { }
+```
+````
+
 Content is trusted author-written HTML, not sanitized user submissions.
 YouTube embeds can use ordinary HTML:
 

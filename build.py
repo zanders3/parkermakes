@@ -13,6 +13,7 @@ from urllib.parse import urlsplit, urlunsplit
 import xml.etree.ElementTree as ET
 
 from vendor import markdown2
+from highlight import highlight_code_blocks
 from image import thumbnail
 
 ROOT = Path(__file__).resolve().parent
@@ -47,7 +48,7 @@ def read_page(path):
         page['url'] = f"/{page['date']:%Y/%m/%d}/{path.stem}/" if page['post'] else '/' + path.relative_to(SOURCE).with_suffix('').as_posix().removesuffix('index').rstrip('/')
         if not page['url'].endswith('/'):
             page['url'] += '/'
-        page['body'] = captions(str(MARKDOWN.convert(body)))
+        page['body'] = captions(highlight_code_blocks(str(MARKDOWN.convert(body))))
         page['source'] = path
         return page
     except (ValueError, KeyError) as error:
