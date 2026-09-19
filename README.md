@@ -44,7 +44,7 @@ to relative links so the output also works under a GitLab project subpath.
 
 Standalone pages use `source/name/index.md` with a title in TOML front matter.
 The homepage introduction is `source/index.md`. `layout = "home"`,
-`"articles"` and `"portfolio"` select the three listing layouts.
+`"writing"` and `"projects"` select the three listing layouts.
 Other files under `source/` are copied as static assets.
 
 Markdown supports headings, lists, links, images, fenced and indented code,

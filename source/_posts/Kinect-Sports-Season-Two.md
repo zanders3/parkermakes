@@ -1,7 +1,7 @@
 +++
 title = "Kinect Sports: Season Two"
 date = 2011-11-25
-categories = ["Portfolio"]
+categories = ["Projects"]
 tags = ["C++", "C#", "Actionscript", "Xbox 360"]
 thumbnail = "/2011/11/25/Kinect-Sports-Season-Two/logo.png"
 description = "Kinect Sports Season Two was a Xbox 360 game developed by Rare and Big Park for the Kinect as a direct sequel to the BAFTA award winning Kinect Sports title."

@@ -2,7 +2,7 @@
 title = "The SLAB Memory Allocator"
 date = 2018-02-24
 tags = ["OSdev", "C++"]
-categories = ["Articles"]
+categories = ["Writing"]
 thumbnail = "/2018/02/24/the-slab-allocator/computer-memory-chips.png"
 description = "How to write your very own SLAB memory allocator!"
 +++

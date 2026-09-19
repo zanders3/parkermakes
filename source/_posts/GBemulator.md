@@ -2,7 +2,7 @@
 title = "GB Emulator"
 date = 2017-08-03
 tags = ["C++"]
-categories = ["Portfolio"]
+categories = ["Projects"]
 thumbnail = "/2017/08/03/GBemulator/tetris.png"
 description = "A gameboy hardware emulator that uses GLWT and imgui for rendering."
 +++

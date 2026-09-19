@@ -2,7 +2,7 @@
 title = "CSR Racing"
 date = 2012-12-12
 tags = ["Unity", "C#", "iOS", "OSX", "Android"]
-categories = ["Portfolio"]
+categories = ["Projects"]
 thumbnail = "/2012/12/12/CSR-Racing/screen1.png"
 description = "CSR Racing is a free to play mobile game by Boss Alien for iOS and Android devices."
 +++

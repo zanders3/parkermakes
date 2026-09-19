@@ -2,7 +2,7 @@
 title = "Writing a Bootloader Part 1"
 date = 2017-10-13
 tags = ["OSdev", "C", "asm"]
-categories = ["Articles"]
+categories = ["Writing"]
 thumbnail = "/2017/10/13/writing-a-bootloader/floppy.png"
 description = "This post describes how to write a simple Hello world bootloader"
 +++

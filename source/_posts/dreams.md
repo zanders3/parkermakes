@@ -2,7 +2,7 @@
 title = "Dreams"
 date = 2023-09-10
 tags = ["C", "C++", "Golang"]
-categories = ["Portfolio"]
+categories = ["Projects"]
 thumbnail = "/2023/09/10/dreams/dreams.png"
 description = "Dreams, a game about making games by Media Molecule"
 +++

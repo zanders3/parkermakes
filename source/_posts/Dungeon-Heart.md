@@ -2,7 +2,7 @@
 title = "Dungeon Heart"
 date = 2013-01-27
 tags = ["Unity", "C#"]
-categories = ["Portfolio"]
+categories = ["Projects"]
 thumbnail = "/2013/01/27/Dungeon-Heart/screen1.png"
 description = "Dungeon Heart was a game made in 48 hours with Alex Trowers and Leanne Bayley as part of the 2013 Global Game Jam game jamming competition."
 +++

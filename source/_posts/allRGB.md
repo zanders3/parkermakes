@@ -2,7 +2,7 @@
 title = "allRGB Rainbow Fractal"
 date = 2014-03-15
 tags = ["C++"]
-categories = ["Portfolio"]
+categories = ["Projects"]
 thumbnail = "/2014/03/15/allRGB/rainbowfractal.png"
 description = "The challenge was simple; create an image containing all 16777216 RGB colours in a single image with not one colour missing or duplicated!"
 +++

@@ -2,7 +2,7 @@
 title = "Wikitime"
 date = 2012-04-12
 tags = ["Java", "Javascript", "Lucene"]
-categories = ["Portfolio"]
+categories = ["Projects"]
 thumbnail = "/2012/04/12/Wikitime/screen4.png"
 description = "Wikitime was my final year project of my BSc Computer Science degree at the University of Southampton."
 +++

@@ -2,7 +2,7 @@
 title = "Trapped"
 date = 2011-11-12
 tags = ["Unity", "C#"]
-categories = ["Portfolio"]
+categories = ["Projects"]
 thumbnail = "/2011/11/12/Trapped/screen1.png"
 description = "Trapped was my entry for Ludum Dare 22; a game making competition where you have 48 hours to make a game independently from Scratch!"
 +++

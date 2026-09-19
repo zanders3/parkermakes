@@ -20,7 +20,7 @@ SOURCE, OUTPUT = ROOT / 'source', ROOT / 'public'
 TITLE = 'parkermakes.uk'
 SUBTITLE = "Alex Parker's Website"
 AUTHOR = 'Alex Parker'
-DESCRIPTION = "Alex Parker's Portfolio and Articles"
+DESCRIPTION = "Alex Parker's Projects and Writing"
 SITE_URL = os.environ.get('SITE_URL', 'https://parkermakes.uk').rstrip('/')
 MARKDOWN = markdown2.Markdown(extras=['fenced-code-blocks', 'highlightjs-lang', 'header-ids'])
 
@@ -110,8 +110,8 @@ def widget(title, posts):
 def build():
     pages = [read_page(p) for p in sorted(SOURCE.rglob('*.md'))]
     posts = sorted((p for p in pages if p['post']), key=lambda p: (p['date'], p['url']), reverse=True)
-    groups = {name: [p for p in posts if name in p['categories']] for name in ('Articles', 'Portfolio')}
-    sidebar = widget('Portfolio', list(reversed(groups['Portfolio']))) + widget('Articles', groups['Articles'])
+    groups = {name: [p for p in posts if name in p['categories']] for name in ('Writing', 'Projects')}
+    sidebar = widget('Projects', list(reversed(groups['Projects']))) + widget('Writing', groups['Writing'])
     sidebar += '<div class="widget"><h3 class="title"><a href="/archives/">All posts</a></h3></div>'
     template = Template((ROOT / 'templates/page.html').read_text(encoding='utf-8'))
     outputs = {}
@@ -150,7 +150,7 @@ def build():
         page['thumbnail'], page['thumbnail_dimensions'] = thumbnails[url]
 
     def render(url, title, body, description=DESCRIPTION, is_page=False, active_nav=''):
-        nav = {name: '' for name in ('home', 'portfolio', 'articles')}
+        nav = {name: '' for name in ('home', 'projects', 'writing')}
         if active_nav:
             nav[active_nav] = ' class="active" aria-current="page"'
         html = template.substitute(title=escape(title + ' | ' + SUBTITLE if title else SUBTITLE),
@@ -164,9 +164,9 @@ def build():
         layout = page.get('layout', '')
         if layout == 'home':
             body = article(page['title'], page['body'], footer=None)
-            body += summary('Articles', groups['Articles'][:3], '/articles/')
-            body += summary('Portfolio', groups['Portfolio'], '/portfolio/')
-        elif layout in ('articles', 'portfolio'):
+            body += summary('Writing', groups['Writing'][:3], '/writing/')
+            body += summary('Projects', groups['Projects'], '/projects/')
+        elif layout in ('writing', 'projects'):
             body = summary(page['title'], groups[layout.title()])
         elif layout:
             raise ValueError(f'{page["source"]}: unknown layout {layout!r}')
@@ -174,9 +174,9 @@ def build():
             footer = ''.join(f'<div class="{key}">{escape(", ".join(page.get(key, [])))}</div>' for key in ('categories', 'tags') if page.get(key))
             body = article(page['title'], page['body'], footer, date_html(page, linked=True) if page['post'] else '',
                            'post' if page['post'] else 'page', 'title')
-        active_nav = layout if layout in ('home', 'portfolio', 'articles') else ''
+        active_nav = layout if layout in ('home', 'projects', 'writing') else ''
         if page['post']:
-            active_nav = next((name.lower() for name in ('portfolio', 'articles')
+            active_nav = next((name.lower() for name in ('Projects', 'Writing')
                                if name in page.get('categories', [])), '')
         render(page['url'], '' if layout == 'home' else page['title'], body,
                page.get('description', DESCRIPTION), not page['post'] and not layout, active_nav)
