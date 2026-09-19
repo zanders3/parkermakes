@@ -36,6 +36,8 @@ The `+++` block is TOML. Dates are unquoted; strings are quoted. Title,
 date, categories, thumbnail and description are required for posts. Tags
 are optional. Use `Writing` or `Projects` for the respective section;
 all posts also appear in `/archives/`. Posts sort newest first.
+Set the optional `game_credit` boolean on a Projects post to show it in the
+Game Credits section ahead of the other cards on `/projects/`.
 
 Put images and downloads in `source/_posts/my-post/`. The example is
 published at `/2026/09/17/my-post/`; its filename and date determine its URL.

@@ -42,6 +42,8 @@ def read_page(path):
         for key in ('categories', 'tags'):
             if key in page and (not isinstance(page[key], list) or not all(isinstance(v, str) for v in page[key])):
                 raise ValueError(f'{key} must be an array of strings')
+        if 'game_credit' in page and not isinstance(page['game_credit'], bool):
+            raise ValueError('game_credit must be a boolean')
         if 'date' in page and type(page['date']) is not dt.date:
             raise ValueError('date must be an unquoted YYYY-MM-DD date')
         page['post'] = path.parent.name == '_posts'
@@ -190,8 +192,13 @@ def build():
                 body += card_summary('Highlights', highlighted, kind='highlights')
             body += summary('Writing', groups['Writing'][:3], '/writing/')
         elif layout in ('writing', 'projects'):
-            body = (card_summary(page['title'], groups['Projects'], kind='project-cards', show_date=True)
-                    if layout == 'projects' else summary(page['title'], groups['Writing']))
+            if layout == 'projects':
+                game_credits = [post for post in groups['Projects'] if post.get('game_credit', False)]
+                projects = [post for post in groups['Projects'] if not post.get('game_credit', False)]
+                body = card_summary('Game Credits', game_credits, kind='project-cards', show_date=True)
+                body += card_summary(page['title'], projects, kind='project-cards', show_date=True)
+            else:
+                body = summary(page['title'], groups['Writing'])
         elif layout:
             raise ValueError(f'{page["source"]}: unknown layout {layout!r}')
         else:

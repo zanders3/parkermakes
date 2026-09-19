@@ -3,6 +3,7 @@ title = "Detour"
 date = 2011-05-11
 tags = ["C#", "XNA", "HLSL"]
 categories = ["Projects"]
+game_credit = true
 thumbnail = "/2011/05/11/Detour/screen1.png"
 description = "Detour was an indie game developed in XNA and released on Steam in October 2011."
 +++

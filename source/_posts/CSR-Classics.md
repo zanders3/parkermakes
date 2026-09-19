@@ -3,6 +3,7 @@ title = "CSR Classics"
 date = 2013-10-05
 tags = ["Unity", "C#", "iOS", "Android"]
 categories = ["Projects"]
+game_credit = true
 thumbnail = "/2013/10/05/CSR-Classics/screen1.png"
 description = "CSR Classics is a free to play game by Boss Alien in collaboration with Mad Atom Games for iOS and Android devices."
 +++
