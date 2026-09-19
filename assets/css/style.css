@@ -142,13 +142,14 @@ a:hover {
   text-decoration: none;
 }
 #headerinner h1 {
-  background: url("images/toplogo.png") no-repeat;
+  background: url("images/logo.png") no-repeat;
   font-weight: normal;
   font-size: 32pt;
   line-height: 25px;
-  height: 90px;
-  padding-left: 130px;
-  padding-top: 50px;
+  height: 60px;
+  padding-left: 75px;
+  padding-top: 14px;
+  margin-top: 10px;
   margin-left: 10px;
 }
 #headerinner h1 small {
@@ -181,7 +182,13 @@ a:hover {
 #headerinner #main-nav ul li {
   float: left;
   margin-left: 30px;
-  margin-top: 90px;
+  margin-top: 36px;
+}
+#headerinner #main-nav ul li a {
+  display: block;
+  border-bottom: 2px solid;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 @media screen and (max-width: 740px) {
   #headerinner #main-nav ul li {
@@ -192,6 +199,7 @@ article {
   -webkit-box-shadow: 1px 1px 10px #b2b2b2;
   box-shadow: 1px 1px 10px #b2b2b2;
   background: url("images/cream_dust.png");
+  border-radius: 10px;
 }
 article.page {
   padding-left: 20px;
@@ -635,6 +643,7 @@ article footer .addthis iframe {
   box-shadow: 1px 1px 10px #b2b2b2;
   margin-bottom: 30px;
   word-wrap: break-word;
+  border-radius: 10px;
 }
 #sidebar .widget .title {
   padding: 15px 20px;

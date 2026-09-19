@@ -17,11 +17,11 @@ from image import thumbnail
 
 ROOT = Path(__file__).resolve().parent
 SOURCE, OUTPUT = ROOT / 'source', ROOT / 'public'
-TITLE = '3zanders.co.uk'
+TITLE = 'parkermakes.uk'
 SUBTITLE = "Alex Parker's Website"
 AUTHOR = 'Alex Parker'
 DESCRIPTION = "Alex Parker's Portfolio and Articles"
-SITE_URL = os.environ.get('SITE_URL', 'https://3zanders.co.uk').rstrip('/')
+SITE_URL = os.environ.get('SITE_URL', 'https://parkermakes.uk').rstrip('/')
 MARKDOWN = markdown2.Markdown(extras=['fenced-code-blocks', 'highlightjs-lang', 'header-ids'])
 
 
