@@ -9,21 +9,25 @@ description = "I built a robot dog. This took me on a big adventure across whole
 
 ![Dogsbod v2](dogsbod/dogsbod.png)
 
-Goal: Build a small, cheap and stupid quadruped robot dog. How hard could it be?
+## Goal: Build a small, cheap and stupid quadruped robot dog
 
----
+How hard could it be?
 
-As it turns out, suprisingly difficult! Come and join me on an adventure as we learn what it takes to build the simplest robot dog possible. The process ended up with me learning CAD, mechanical engineering, 3D printing, PCB design and power electronics. 
+As it turns out, it is suprisingly difficult! The process ended up with me learning CAD, mechanical engineering, 3D printing, PCB design, PCB manufacturing and electrical engineering. 
+
+Though in the end I did manage to get it walking:
 
 ![Dogsbod v1 Walk and Turn Test](dogsbod/dogsbod_walknturn.mp4)
 
-I am still learning even now and have a new found appreciation for electronics, manufacturing and robotics as a result.
+I am still learning even now, there is still a lot to further improve and I have a new found appreciation and respect for those building and pursuing electronics, manufacturing and robotics as a result.
+
+Come and join me on an adventure as we learn what it takes to build the simplest, cheapest robot dog I can come up with.
 
 ## Initial Plan
 
 In January I was [inspired](https://www.instructables.com/GoodBoy-3D-Printed-Arduino-Robot-Dog/) by a [bunch of](https://www.instructables.com/ESP32-Small-Robot-Dog/) [projects online](https://www.instructables.com/DogBot-V2-Make-Your-Own-Quadruped-Robot-From-Scrat/) and [various](https://www.youtube.com/watch?v=VhUvoV5XyRg) [youtube](https://www.youtube.com/watch?v=iXmrPoqd8gs) videos explaining the process of creating a robot dog, and this got me excited enough to want to give it a try myself.
 
-At the time of starting this project I didn't have a 3D printer and I hadn't used CAD software before, though I had spent a lot of time in Blender.
+At the time of starting this project I didn't have a 3D printer and I hadn't used CAD software before, though I know how to use Blender really well.
 
 The idea was to try and build a robot using the cheapest servos I could find, mostly for power and budget reasons, and then try to fit the robot's movement within those limits. I wanted to be able to run the robot from 4xAA batteries because I didn't want to jump straight to high power electronics.
 
@@ -82,8 +86,6 @@ I then set about designing the robot in CAD. I initially tried to learn Freecad,
 So in the end I chose to learn solidworks instead.
 
 Solidworks at its core is great and powerful CAD software. However the '3D experience platform' is obnoxious, and asks you to login every single time you open it. 
-
-I've also found solidworks is happy to crash quite regularly, and in one scenario I was completely unable to open it for a week because of a Microsoft Edge DLL. It would crash every time '3D experience' tried to prompt you to save your CAD files into their platform. Which given how crashy it is, doesn't provide much confidence.
 
 Luckily you can still save locally and check that stuff into Git, and again the core CAD software itself is really good.
 

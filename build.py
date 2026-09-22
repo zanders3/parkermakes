@@ -102,11 +102,25 @@ def read_page(path):
 
 
 def captions(body):
+    """Render MP4 embeds and caption media, leaving comments and escaped code intact."""
     def caption(match):
         image = match.group()
-        alt = re.search(r'\balt="([^"]+)"', image)
-        return image + (f'<span class="caption">{escape(unescape(alt[1]))}</span>' if alt else '')
-    return re.sub(r'<img\b[^>]*>', caption, body)
+        if not re.match(r'<img\b', image, flags=re.IGNORECASE):
+            return image
+        attributes = {attr[1].lower(): unescape(attr[3]) for attr in re.finditer(
+            r'''\s([\w-]+)\s*=\s*(["'])(.*?)\2''', image, flags=re.DOTALL)}
+        alt = attributes.get('alt', '')
+        src = attributes.get('src', '')
+        if urlsplit(src).path.lower().endswith('.mp4'):
+            image = f'<video src="{escape(src, quote=True)}" controls playsinline preload="metadata"'
+            if alt:
+                image += f' aria-label="{escape(alt, quote=True)}"'
+            if 'title' in attributes:
+                image += f' title="{escape(attributes["title"], quote=True)}"'
+            image += '></video>'
+        return image + (f'<span class="caption">{escape(alt)}</span>' if alt else '')
+    return re.sub(r'''<!--.*?-->|<[a-zA-Z][^>"']*(?:(?:"[^"]*"|'[^']*')[^>"']*)*>''',
+                  caption, body, flags=re.DOTALL)
 
 
 def links(html, url, absolute=False):
