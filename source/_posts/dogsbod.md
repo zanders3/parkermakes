@@ -146,11 +146,71 @@ With this I was able to get a bunch of servos moving about.
 
 ## IK Solvers and Five Bar Linkages
 
+For the next phase of the plan I set the goal of buying a 3D printer and figuring out the inverse kinematics (IK) of each leg allowing the conversion of a 2D position (since the v1 robot only has two degrees of freedom per leg) relative to each leg into a pair of motor angles to command the servos to move to.
 
+I chose the [Bambu Lab P1S](https://uk.store.bambulab.com/products/p1s) 3D printer. It's a great 3D printer. The print failures that I have had have mostly been user error or my down to my often damp garage. My goal was to have a tool instead of a 3D printing hobby and it is perfect for this.
 
-## Picking a 3D Printer
+The initial design called for what's known in robotics land as a 'Five Bar Linkage' per leg. I started by creating a quick solver in Python. You can work forwards and backwards from the target position via relatively simple trig.
 
-It was at this point that I decided to invest in a 3D printer. I went for a [Bambu Lab P1S](https://uk.store.bambulab.com/products/p1s). Honestly it's a great 3D printer. I've not had to do any maintenance on it to date, the Bambu Handy app works great, the slicer software works brilliantly. The print failures that I have had have mostly been user error or my down to my often damp garage - thanks english weather! My goal was to have a tool not to do 3D printing as a hobby, and it is perfect for this.
+I ended up writing this in python, visualising it with matplotlib.
 
-I know there are concerns about the steps Bambu Labs have taken more recently to lock down the ecosystem etc but my CAD designs are not important/secret enough for me to really worry about this. I do turn the machine off at the wall when I'm not using it. It's great that there is a local developer mode that I *could* turn on if I want to actually take control, but convenience and *its a tool just should 'just work'* wins for me for now.
+![Five Bar Solver](dogsbod/ik_solver.png)
+
+Here is the core algorithm for two bar and five bar IK:
+```python
+def inverse_kinematics_two_bar(x, y, flip=False):
+    cos_theta2 = (x**2 + y**2 - l1**2 - l2**2) / (2 * l1 * l2)
+    if cos_theta2 > 1.0:
+        cos_theta2 = 1.0
+    if cos_theta2 < -1.0:
+        cos_theta2 = -1.0
+    theta2 = math.acos(cos_theta2)
+    if flip:
+        theta2 = 2.0*math.pi - theta2
+    k1 = l1 + l2 * math.cos(theta2)
+    k2 = l2 * math.sin(theta2)
+    theta1 = math.atan2(y, x) - math.atan2(k2, k1)
+    return theta1, theta2
+
+def inverse_kinematics_five_bar(x, y):
+    hjw = joint_width*0.5
+    lt1, lt2 = inverse_kinematics_two_bar(x-hjw, y)
+    rt1, rt2 = inverse_kinematics_two_bar(x+hjw, y, True)
+    return lt1,lt2,rt1,rt2
+```
+
+The problem with this naive algorithm is that joint limits are not respected, and our servos are limited both by joint angle and the relative position of the legs. We needed to find a way to 'solve' the IK such that the servo angles could not be commanded into an invalid position. I wasn't sure about how strong 3D prints were at the time, so I didn't want to break anything just because I wrote the software wrong!
+
+It turns out that the valid IK angles describe a neat circle around the linkage in the direction you care about. A valid IK angle is one that can be reached by the joints, which I also chose to call 'the safe zone'. This is calculated by taking the dot product of a single pair of leg forward vectors. This visualisation shows if a position is reachable by a two bar linkage:
+
+![2 Bar Linkage IK Validity](dogsbod/ik_solver2.png)
+
+If look at where both linkages can reach you end up with an interesting lozenge shaped 'safe zone'. Both actuators must be kept within this at all times somehow:
+
+![5 Bar Linkage IK Validity](dogsbod/ik_solver3.png)
+
+Since I could only know if a joint is valid or not by calculating it, I ended up finding a circle that described the path back to the 'safest zone' and if the commanded position was outside this I would move the target position closer to the circle. In effect a kind of 'gradient descent'.
+
+This allowed the legs to stretch as far as they could to the target, without exceeding joint limits or getting the joints into a 'degenerate' (pointing in a straight line at the target) position.
+
+![5 Bar Linkage IK](dogsbod/ik_solver4.png)
+
+The problem with this approach is it's iterative: you need to do a gradient descent multiple times when outside the acceptable IK range. With four legs to position on a microcontroller with no FPU I decided I could pre-compute the joint angles via a lookup table `(X,Y) => (motor A angle, motor B angle)` across the entire IK range.
+
+Since all the legs are the same, I can re-use this lookup table across the robot. The joint angles are 0-180 which fits in a byte, and the accuracy of the servos themselves is low enough that you can get away with a pretty coarse table of 128 'pixels' wide by 32 'pixels' high. So a total of 8KB of storage is required for the ik lookup table.
+
+At runtime you effectively lookup this table and do a bilinear interpolation between the adjacent cells to get your target joint angles.
+
+```c
+// generated by ik.py; x = -0.6 -> 0.6; y = 0.5 -> 1.0; output = left degrees, right degrees
+const unsigned char arm_pos_arr[128][32][2] = {
+  {{171,70},{171,71},{171,73},{171,75},/*and so on...*/
+};
+```
+
+With all of this working I was ready to test it on the real thing. I printed one of the legs and after a couple of failed 3D prints got this result. In this test I was manually moving the target IK position via UART:
+
+![Dogsbod v1 Leg IK Test](dogsbod/dogsbod_legs_v1.mp4)
+
+## Higher Level Motion Planning
 
