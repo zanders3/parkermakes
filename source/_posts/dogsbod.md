@@ -13,9 +13,9 @@ description = "I built a robot dog. This took me on a big adventure across whole
 
 How hard could it be?
 
-As it turns out, it is suprisingly difficult! The process ended up with me learning CAD, mechanical engineering, 3D printing, PCB design, PCB manufacturing and electrical engineering. 
+As it turns out, it is surprisingly difficult! The process ended up with me learning CAD, mechanical engineering, 3D printing, PCB design, PCB manufacturing and electrical engineering. 
 
-Though in the end I did manage to get it walking:
+Though in the end I did manage to get it walking, controlled with a DS4 controller over Bluetooth:
 
 ![Dogsbod v1 Walk and Turn Test](dogsbod/dogsbod_walknturn.mp4)
 
