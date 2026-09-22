@@ -15,6 +15,8 @@ Goal: Build a small, cheap and stupid quadruped robot dog. How hard could it be?
 
 As it turns out, suprisingly difficult! Come and join me on an adventure as we learn what it takes to build the simplest robot dog possible. The process ended up with me learning CAD, mechanical engineering, 3D printing, PCB design and power electronics. 
 
+![Dogsbod v1 Walk and Turn Test](dogsbod/dogsbod_walknturn.mp4)
+
 I am still learning even now and have a new found appreciation for electronics, manufacturing and robotics as a result.
 
 ## Initial Plan
@@ -55,10 +57,9 @@ assume 50% torque available because bad quality. 900g/cm.
 19.4g per leg
 ```
 
-I also did some really rough power calculations, but from a position of relative ignorance!
+I did some really rough power calculations.
 
 ```
-
 Battery pack: 4× AA NiMH in series
 
     Nominal voltage: 4⋅1.2=4.8 V
@@ -72,13 +73,13 @@ Servos: 8× SG90
     8 servos could theoretically hit 5–6 A if they all slam into stall at once
 ```
 
-I found the 5-6A result quite worrying, but hoped that if they didn't all stall at the same time it would be ok? I pay for this mistake later on, but I get further than you think! :D
+I found the 5-6A result quite worrying, but hoped that if they didn't all stall at the same time it would be ok? I pay for this mistake later on, but I do get further than I expected!
 
 ## CAD Design
 
-I then set about designing the robot in CAD. I initially tried to learn Freecad, but bounced off the software. I keep bouncing off it, but it does seem like freecad development has really progressed this year. I think Freecad will win in the end, it really feels like Blender before the 2.8 UI overhaul.
+I then set about designing the robot in CAD. I initially tried to learn Freecad, but bounced off the software. They keep updating it and I keep bouncing off it, but it does seem like freecad development has really progressed this year. I think Freecad will win in the end, it currently feels like Blender just before the 2.8 UI overhaul.
 
-So in the end I picked solidworks instead. 
+So in the end I chose to learn solidworks instead.
 
 Solidworks at its core is great and powerful CAD software. However the '3D experience platform' is obnoxious, and asks you to login every single time you open it. 
 
@@ -91,6 +92,63 @@ After a week or so learning Solidworks I came up with this design:
 ![Dogsbod v1 CAD Design](dogsbod/dogsbod_cad.png)
 
 This allowed me to calculate the final mass budget:
+```
+Each leg is 24.19g x4 = 96.76g
+Body is = 36.8g
+Battery box is = 22.37g
+=> 155.93g
+Pico + Servo Driver = 34g
+Servos = 13.5g x 8 = 108g
+NiMH x 4 = 30g x 4 = 120g
+=> 417.9g
+
+360g budget => 15% over budget.
+```
+
+I was 5g over my intended mass budget, though given I had reduced the torque by 50% to arrive at that original budget I decided this was good enough to proceed. So if I naively assume the servos will deliver their actual torque specs then I'm only at 58% of the mass budget.
+
+## Electronics and Initial Firmware
+
+On the electronics side, I set myself an initial goal of getting the waveshare servo board up and running, driving a single servo. 
+
+I wired up another Pico I had lying around to act as a [Pico Debugger Probe](https://www.raspberrypi.com/documentation/microcontrollers/debug-probe.html) which makes flashing the firmware significantly less annoying: you can set things up in VS code to the point where mashing F5 compiles, flashes and then attaches the debugger. So you can have full debugging access, which I'm very used to/spoiled with from my game console development experience. Debuggers are a very powerful tool to have available, and are worth fighting for to gain that low level understanding of what's going on.
+
+For that reason it's also really worth spending the time to setup UART so you can print what is going on inside the chip as well. Wiring UART correctly is a complete nightmare, and I always seem to get it the wrong way round. I don't think I'm the only one!
+
+My first attempt to get the waveshare board to move a servo didn't work, and in the process of figuring out why I accidentally shorted the 5V output and GND together with my multimeter probes. There was a terrifying moment where I saw an arc between the pins and then power to the whole board was lost, which I think was the efuse within my PC's USB ports. Luckily I didn't fry my PC's USB ports or even worse the whole PC itself but I **did** fry the buck converter on the waveshare board.
+
+This was confirmed after a bit of (much more careful!) multimeter probing around the buck converter pins when connected to 5V.
+
+In the end the problem turned out to be that I'd forgotten to turn on the 'SERVO POWER' switch on the waveshare board! ARGH. In my defence the schematic of my r1 waveshare board I'd bought many years ago had been updated to a new revision with better layout + power options so I don't actually have the schematic of the board I have.
+
+As a result I learned that it's a great idea to check in the datasheets for the components you're working with into Git. Please do this instead of assuming your favourite component will be archived for you forever!
+
+The firmware required to drive a servo really is simple. You [wobble the data pin](https://en.wikipedia.org/wiki/Pulse-width_modulation) the servo is connected at the rate that that the servo chip wants you to wobble the pin at. For the Miuzei servos I'm using they want a pulse width modulation (PWM) working pulse width of 500-2500 usec.
+```c
+#include "hardware/pwm.h"
+
+static void set_servo_angle(int pin, int angle) {
+    if (angle <= 0) angle = 0;
+    if (angle >= 180) angle = 180;
+    if (pin <= 0) pin = 0;
+    if (pin >= NUM_SERVOS) pin = NUM_SERVOS - 1;
+    pin += SERVO_MIN_PIN;
+    uint32_t pulse_us = 500 + (angle * (2500 - 500)) / 180;
+    uint32_t slice = pwm_gpio_to_slice_num(pin);
+    uint32_t channel = pwm_gpio_to_channel(pin);
+    pwm_set_chan_level(slice, channel, pulse_us);
+}
+```
+
+With this I was able to get a bunch of servos moving about.
+
+## IK Solvers and Five Bar Linkages
 
 
+
+## Picking a 3D Printer
+
+It was at this point that I decided to invest in a 3D printer. I went for a [Bambu Lab P1S](https://uk.store.bambulab.com/products/p1s). Honestly it's a great 3D printer. I've not had to do any maintenance on it to date, the Bambu Handy app works great, the slicer software works brilliantly. The print failures that I have had have mostly been user error or my down to my often damp garage - thanks english weather! My goal was to have a tool not to do 3D printing as a hobby, and it is perfect for this.
+
+I know there are concerns about the steps Bambu Labs have taken more recently to lock down the ecosystem etc but my CAD designs are not important/secret enough for me to really worry about this. I do turn the machine off at the wall when I'm not using it. It's great that there is a local developer mode that I *could* turn on if I want to actually take control, but convenience and *its a tool just should 'just work'* wins for me for now.
 
