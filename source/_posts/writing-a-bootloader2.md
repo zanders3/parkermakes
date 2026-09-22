@@ -3,7 +3,7 @@ title = "Writing a Bootloader Part 2"
 date = 2017-10-16
 tags = ["OSdev", "C", "asm"]
 categories = ["Writing"]
-thumbnail = "/2017/10/13/writing-a-bootloader/floppy.png"
+thumbnail = "writing-a-bootloader/floppy.png"
 description = "This second post describes how to write a protected mode 'Hello World!' bootloader"
 +++
 
@@ -45,7 +45,7 @@ Global Descriptor Table
 
 The GDT we're going to set up involves 3 parts: a null segment, a code segment and a data segment. The structure of each GDT entry looks like this:
 
-![GDT Entry Layout](/2017/10/13/writing-a-bootloader/gdt.png)
+![GDT Entry Layout](writing-a-bootloader/gdt.png)
 
 Here's what the fields mean:
 - **base** a 32 bit value describing where the segment begins
@@ -110,7 +110,7 @@ Writing to the VGA Text Buffer
 
 Finally let's write 'Hello world!' to the screen from Protected Mode! We can't call the BIOS any more but we can write to the [VGA text buffer](https://en.wikipedia.org/wiki/VGA-compatible_text_mode) directly. This is memory mapped to location `0xb8000`. Each character on screen has this layout:
 
-![VGA Character Layout](/2017/10/13/writing-a-bootloader/vga.png)
+![VGA Character Layout](writing-a-bootloader/vga.png)
 
 The top byte defines the [character colour](https://en.wikipedia.org/wiki/Video_Graphics_Array#Color_palette) in the buffer as an int value from 0-15 with 0 = black, 1 = blue and 15 = white. The bottom byte defines an [ASCII](http://www.asciitable.com/) code point. Using this information we can write some assembly that writes 'Hello World' in blue text:
 
@@ -134,10 +134,10 @@ hello: db "Hello world!",0
 Let's run the thing!
 --------------------
 
-We finally have everything! Save the whole thing as a `boot2.asm` file ([source available here](/2017/10/13/writing-a-bootloader/boot2.asm)) then run it with `nasm -f bin boot2.asm && qemu-system-x86_64 -fda boot.bin`. You should get something like this!
+We finally have everything! Save the whole thing as a `boot2.asm` file ([source available here](writing-a-bootloader/boot2.asm)) then run it with `nasm -f bin boot2.asm && qemu-system-x86_64 -fda boot.bin`. You should get something like this!
 
 
-![Protected Mode Hello World](/2017/10/13/writing-a-bootloader/boot2.png)
+![Protected Mode Hello World](writing-a-bootloader/boot2.png)
 
 Next Steps
 ----------

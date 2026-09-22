@@ -3,7 +3,7 @@ title = "Writing a Bootloader Part 3"
 date = 2017-10-18
 tags = ["OSdev", "C", "asm"]
 categories = ["Writing"]
-thumbnail = "/2017/10/13/writing-a-bootloader/floppy.png"
+thumbnail = "writing-a-bootloader/floppy.png"
 description = "This third post describes how to go beyond 512 bytes and how to compile and load a C++ function into memory"
 +++
 
@@ -29,7 +29,7 @@ int 0x13
 
 The disk number is implicitly placed into `dl` by the BIOS on startup. Earlier on we stashed it into memory with `mov [disk], dl`.
 
-So we can now load 512 bytes from the second sector into memory! Let's make use of that and move the hello world printing code from [last time](/2017/10/13/writing-a-bootloader/boot2.asm) beyond the first 512 bytes of disk. Like this:
+So we can now load 512 bytes from the second sector into memory! Let's make use of that and move the hello world printing code from [last time](writing-a-bootloader/boot2.asm) beyond the first 512 bytes of disk. Like this:
 
 ```nasm
 times 510 - ($-$$) db 0
@@ -54,9 +54,9 @@ halt:
 times 1024 - ($-$$) db 0
 ```
 
-The last line pads our bootloader to 1024 bytes so we're not copying uninitialised bytes from disk. It's probably easiest to download [boot3.asm](/2017/10/13/writing-a-bootloader/boot3.asm) directly. You can compile and run it with `nasm -f bin boot3.asm -o boot.bin && qemu-system-x86_64 -fda boot.bin` getting this result:
+The last line pads our bootloader to 1024 bytes so we're not copying uninitialised bytes from disk. It's probably easiest to download [boot3.asm](writing-a-bootloader/boot3.asm) directly. You can compile and run it with `nasm -f bin boot3.asm -o boot.bin && qemu-system-x86_64 -fda boot.bin` getting this result:
 
-![Hello more than 512 bytes world](/2017/10/13/writing-a-bootloader/boot3.png)
+![Hello more than 512 bytes world](writing-a-bootloader/boot3.png)
 
 Getting to C++
 --------------
@@ -162,7 +162,7 @@ kernel_stack_bottom: equ $
 kernel_stack_top:
 ```
 
-That's it. We're ready to compile and run this thing! Here are my versions of [the linker script](/2017/10/13/writing-a-bootloader/linker.ld), [cpp file](/2017/10/13/writing-a-bootloader/kmain.cpp) and [bootsector assembly](/2017/10/13/writing-a-bootloader/boot4.asm)!
+That's it. We're ready to compile and run this thing! Here are my versions of [the linker script](writing-a-bootloader/linker.ld), [cpp file](writing-a-bootloader/kmain.cpp) and [bootsector assembly](writing-a-bootloader/boot4.asm)!
 
 Compiling and Running
 ---------------------
@@ -207,7 +207,7 @@ We can run `hexdump kernel.bin` to check it did the right thing:
 
 Note the `55 aa` there near offset `0x200`? That means it's a valid bootsector! Let's try running it with `qemu-system-x86_64 -fda kernel.bin` and you should get this result.
 
-![Our Hello CPP world bootloader](/2017/10/13/writing-a-bootloader/boot4.png)
+![Our Hello CPP world bootloader](writing-a-bootloader/boot4.png)
 
 Wrapping Up
 -----------

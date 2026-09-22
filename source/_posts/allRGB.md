@@ -3,13 +3,13 @@ title = "allRGB Rainbow Fractal"
 date = 2014-03-15
 tags = ["C++"]
 categories = ["Projects"]
-thumbnail = "/2014/03/15/allRGB/rainbowfractal.png"
+thumbnail = "allRGB/rainbowfractal.png"
 description = "The challenge was simple; create an image containing all 16777216 RGB colours in a single image with not one colour missing or duplicated!"
 +++
 
 The challenge was simple: create an image containing all 16777216 RGB colours in a single image with not one colour missing or duplicated!
 
-![Rainbow Fractal](/2014/03/15/allRGB/rainbowfractal.jpg)
+![Rainbow Fractal](allRGB/rainbowfractal.jpg)
 
 At the time there weren't many mandelbrot fractal examples so I decided to try and find a way to create an all RGB image of the mandelbrot set. The resulting image is a 4096x4096 48.1Mb in PNG format. A compressed thumbnail is below; go to allRGB.com if you [want to see the full image](http://allrgb.com/rainbow-fractal).
 

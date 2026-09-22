@@ -3,13 +3,13 @@ title = "The SLAB Memory Allocator"
 date = 2018-02-24
 tags = ["OSdev", "C++"]
 categories = ["Writing"]
-thumbnail = "/2018/02/24/the-slab-allocator/computer-memory-chips.png"
+thumbnail = "the-slab-allocator/computer-memory-chips.png"
 description = "How to write your very own SLAB memory allocator!"
 +++
 
 One of the primary things an operating system does is allocate memory. In this tutorial we're going to write our very own memory allocator for the rest of the kernel to use to allocate memory. This will allow us to more safely use and allocate strings and implement more complicated data structures which will come in useful later!
 
-![Allocate this thing!](/2018/02/24/the-slab-allocator/computer-memory-chips.jpg)
+![Allocate this thing!](the-slab-allocator/computer-memory-chips.jpg)
 
 In this tutorial I'm going to focus on the [SLAB Memory Allocator](https://en.wikipedia.org/wiki/Slab_allocation) used in the Linux operating system which eliminates memory fragmentation caused by allocations and deallocations. In an operating system this is usually built on top of the [Virtual Memory](https://en.wikipedia.org/wiki/Virtual_memory) system which maps 4KB blocks of memory. This means the goal of the allocator is to chop those 4KB blocks up into more manageable pieces.
 
@@ -49,7 +49,7 @@ Free memory inside a slab is tracked via a linked list where the pointer to the 
 Allocation within a Slab
 ------------------------
 
-![Allocation within a Slab](/2018/02/24/the-slab-allocator/slab_steps.png)
+![Allocation within a Slab](the-slab-allocator/slab_steps.png)
 
 This diagram shows what's going on for a single Slab as you allocate and free memory. In this example you start with a single 4KB Slab containing 4 x 1KB objects which has been allocated at location 10000 in memory. An unaligned low memory location like this is a bad idea in the real world but this makes it easier to understand ;)
 
@@ -277,7 +277,7 @@ int main(int argc, char** argv)
 }
 ```
 
-You can [download the whole file here](/2018/02/24/the-slab-allocator/kalloc.cpp) and then compile and run it like this:
+You can [download the whole file here](the-slab-allocator/kalloc.cpp) and then compile and run it like this:
 
 ```sh
 gcc kalloc.cpp --std=c++11 -m32 -o kalloc && ./kalloc

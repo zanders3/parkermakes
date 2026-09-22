@@ -3,12 +3,12 @@ title = "Writing a Bootloader Part 1"
 date = 2017-10-13
 tags = ["OSdev", "C", "asm", "highlights"]
 categories = ["Writing"]
-thumbnail = "/2017/10/13/writing-a-bootloader/floppy.png"
+thumbnail = "writing-a-bootloader/floppy.png"
 description = "This post describes how to write a simple Hello world bootloader"
 +++
 This article series explains how to write a tiny 32-bit x86 operating system kernel. We won't do very much other than print `Hello world!` to the screen in increasingly complicated ways! We'll start off in assembly and then build up to writing C++!
 
-A [presentation](/2017/10/13/writing-a-bootloader/writingabootloader.pdf) of this article series is also available.
+A [presentation](writing-a-bootloader/writingabootloader.pdf) of this article series is also available.
 
 To follow along you're going to need the NASM assembler and [QEMU](https://www.qemu.org/) to emulate a virtual machine for us. QEMU is great because you don't have to worry about accidentally destroying your hardware with badly written OS code ;) You can install these on [Windows Subsystem for Linux](https://msdn.microsoft.com/en-gb/commandline/wsl/install_guide) or Ubuntu with this command:
 
@@ -29,7 +29,7 @@ A Hello World Bootloader
 
 We're going to write a floppy disk bootloader because it doesn't require us to mess about with file systems which helps keep things simple as possible.
 
-![Cutting edge 1970s technology!](/2017/10/13/writing-a-bootloader/floppy.jpg)
+![Cutting edge 1970s technology!](writing-a-bootloader/floppy.jpg)
 
 When you press the power button the computer loads the BIOS from some flash memory stored on the motherboard. The BIOS initializes and self tests the hardware then loads the first 512 bytes into memory from the media device (i.e. the cdrom or floppy disk). If the last two bytes equal `0xAA55` then the BIOS will jump to location `0x7C00` effectively transferring control to the bootloader. 
 
@@ -58,7 +58,7 @@ times 510 - ($-$$) db 0 ; pad remaining 510 bytes with zeroes
 dw 0xaa55 ; magic bootloader magic - marks this 512 byte sector bootable!
 ```
 
-If you save this file as `boot1.asm` (or [download it here](/2017/10/13/writing-a-bootloader/boot1.asm)) we can now use `nasm` to compile it:
+If you save this file as `boot1.asm` (or [download it here](writing-a-bootloader/boot1.asm)) we can now use `nasm` to compile it:
 
 ```sh
 nasm -f bin boot1.asm -o boot1.bin
@@ -77,7 +77,7 @@ If we run `hexdump boot1.bin` we can see that NASM created some code, padded som
 
 We can now run this thing! You can tell QEMU to boot off a floppy disk using `qemu-system-x86_64 -fda boot1.bin` on Windows 10 you might need to stick `DISPLAY=:0 ` in front to open the window from WSL. You should get something like this!
 
-![Our Hello World bootloader](/2017/10/13/writing-a-bootloader/boot1.png)
+![Our Hello World bootloader](writing-a-bootloader/boot1.png)
 
 Next Steps
 ----------

@@ -13,7 +13,7 @@ import shutil
 from string import Template
 import time
 import tomllib
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import quote, unquote, urlsplit, urlunsplit
 import xml.etree.ElementTree as ET
 
 from vendor import markdown2
@@ -120,6 +120,34 @@ def links(html, url, absolute=False):
     return re.sub(r'''((?:href|src)=["'])(/(?!/)[^"']*)(["'])''', replace, html)
 
 
+def asset_url(value, source, assets):
+    """Resolve a Markdown-local asset to its existing published URL."""
+    target = urlsplit(value)
+    if target.scheme or target.netloc or not target.path or target.path.startswith('/'):
+        return value
+    published = assets.get((source.parent / unquote(target.path)).resolve())
+    if published is None:
+        return value
+    return urlunsplit(('', '', quote(published, safe='/'), target.query, target.fragment))
+
+
+def asset_links(html, source, assets):
+    """Rewrite real HTML attributes, leaving escaped code and comments intact."""
+    def tag(match):
+        if match[0].startswith('<!--'):
+            return match[0]
+
+        def attribute(attr):
+            value = asset_url(unescape(attr[3]), source, assets)
+            return attr[1] + attr[2] + escape(value, quote=True) + attr[2]
+
+        return re.sub(r'''(\s(?:href|src)\s*=\s*)(["'])(.*?)\2''',
+                      attribute, match[0], flags=re.IGNORECASE | re.DOTALL)
+
+    return re.sub(r'''<!--.*?-->|<[a-zA-Z][^>"']*(?:(?:"[^"]*"|'[^']*')[^>"']*)*>''',
+                  tag, html, flags=re.DOTALL)
+
+
 def date_html(page, linked=False):
     date = page['date']
     month = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split()[date.month - 1]
@@ -210,6 +238,12 @@ def build(force=False):
         for asset in sorted(folder.rglob('*')):
             if asset.is_file() and asset.suffix != '.md' and '_posts' not in asset.relative_to(folder).parts:
                 add(asset.relative_to(folder).as_posix(), asset)
+
+    asset_urls = {source.resolve(): '/' + url for url, source in outputs.items()}
+    for page in pages:
+        page['body'] = asset_links(page['body'], page['source'], asset_urls)
+        if 'thumbnail' in page:
+            page['thumbnail'] = asset_url(page['thumbnail'], page['source'], asset_urls)
 
     thumbnails = {}
     for page in posts:

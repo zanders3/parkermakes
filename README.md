@@ -23,13 +23,13 @@ title = "My post"
 date = 2026-09-17
 categories = ["Writing"]
 tags = ["Python"]
-thumbnail = "/2026/09/17/my-post/photo.png"
+thumbnail = "my-post/photo.png"
 description = "A short description for the listing pages."
 +++
 
 Write ordinary Markdown here.
 
-![A caption](/2026/09/17/my-post/photo.jpg)
+![A caption](my-post/photo.jpg)
 ```
 
 The `+++` block is TOML. Dates are unquoted; strings are quoted. Title,
@@ -41,8 +41,13 @@ Game Credits section ahead of the other cards on `/projects/`.
 
 Put images and downloads in `source/_posts/my-post/`. The example is
 published at `/2026/09/17/my-post/`; its filename and date determine its URL.
-Keep those stable after publishing. Root-relative content links are converted
-to relative links so the output also works under a GitLab project subpath.
+Keep those stable after publishing. Images, downloads and thumbnails can use
+paths relative to the Markdown file, so images also work in local Markdown
+previews. Shared assets use the same rule: another post can reference
+`my-post/photo.jpg`, and `source/index.md` can reference
+`../assets/css/images/toplogo.png`. The builder maps these files to their
+published URLs. Root-relative content links remain supported; generated links
+are relative so the output also works under a GitLab project subpath.
 
 Standalone pages use `source/name/index.md` with a title in TOML front matter.
 The homepage introduction is `source/index.md`. `layout = "home"`,
