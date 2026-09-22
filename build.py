@@ -1,13 +1,17 @@
 """Build the site with Python 3.11+; no installation or network required."""
+import argparse
 import datetime as dt
+import hashlib
 from html import escape, unescape
 from io import BytesIO
+import json
 import os
 from pathlib import Path
 import posixpath
 import re
 import shutil
 from string import Template
+import time
 import tomllib
 from urllib.parse import urlsplit, urlunsplit
 import xml.etree.ElementTree as ET
@@ -24,6 +28,46 @@ AUTHOR = 'Alex Parker'
 DESCRIPTION = "Alex Parker's Projects and Writing"
 SITE_URL = os.environ.get('SITE_URL', 'https://parkermakes.uk').rstrip('/')
 MARKDOWN = markdown2.Markdown(extras=['fenced-code-blocks', 'highlightjs-lang', 'header-ids'])
+CACHE_VERSION = 1
+THUMBNAIL_WIDTH = 200
+
+
+def signature(path):
+    try:
+        info = path.stat()
+        return [info.st_mtime_ns, info.st_size] if path.is_file() else None
+    except FileNotFoundError:
+        return None
+
+
+def check_output():
+    """Never follow links (including Windows junctions) in the generated tree."""
+    def linked(path):
+        return path.is_symlink() or bool(getattr(path.lstat(), 'st_file_attributes', 0) & 0x400)
+
+    if OUTPUT.is_symlink() or OUTPUT.resolve() != ROOT / 'public':
+        raise ValueError('public must be a real directory inside the repository')
+    if OUTPUT.exists():
+        if linked(OUTPUT) or not OUTPUT.is_dir():
+            raise ValueError('public must be a real directory inside the repository')
+        for directory, folders, files in os.walk(OUTPUT, followlinks=False):
+            for name in folders + files:
+                path = Path(directory) / name
+                if linked(path):
+                    raise ValueError(f'public must not contain links: {path}')
+
+
+def load_cache(path):
+    try:
+        cache = json.loads(path.read_text(encoding='utf-8'))
+        if (isinstance(cache, dict) and cache.get('version') == CACHE_VERSION
+                and all(isinstance(cache.get(key), dict) for key in ('assets', 'thumbnails'))
+                and all(isinstance(entry, dict) for key in ('assets', 'thumbnails')
+                        for entry in cache[key].values())):
+            return cache
+    except (OSError, ValueError):
+        pass
+    return {'version': CACHE_VERSION, 'assets': {}, 'thumbnails': {}}
 
 
 def read_page(path):
@@ -99,8 +143,8 @@ def summary(title, posts, more=''):
         dimensions = page.get('thumbnail_dimensions')
         size = f' width="{dimensions[0]}" height="{dimensions[1]}"' if dimensions else ''
         rows.append(f'<div class="imageitem"><a href="{url}"><img src="{escape(page["thumbnail"])}"{size} class="nofancybox" alt="" /></a>'
-                    f'<h2 class="title"><a href="{url}">{title_text}</a><small style="float:right">{date_html(page)}</small></h2>'
-                    f'{escape(page["description"])}</div><div class="clearfix"></div>')
+                    f'<h2 class="title"><a href="{url}">{title_text}</a><small class="dateimageitem">{date_html(page)}</small></h2><p class="dateimagedesc">'
+                    f'{escape(page["description"])}</p></div><div class="clearfix"></div>')
     footer = f'<div style="float:right"><a href="{more}">Read More</a></div>' if more else ''
     return article(title, ''.join(rows), footer)
 
@@ -130,7 +174,17 @@ def widget(title, posts):
     return f'<div class="widget tag"><h3 class="title">{title}</h3><ul class="entry">{items}</ul></div>'
 
 
-def build():
+def build(force=False):
+    started = time.perf_counter()
+    check_output()
+    cache_path = ROOT / '.cache/build.json'
+    cache = load_cache(cache_path) if not force else {'assets': {}, 'thumbnails': {}}
+    manifest = {'version': CACHE_VERSION, 'assets': {}, 'thumbnails': {}}
+    generator = hashlib.sha256()
+    for name in ('build.py', 'image.py'):
+        generator.update((ROOT / name).read_bytes())
+    generator = generator.hexdigest()
+    generated = reused = copied = skipped = 0
     pages = [read_page(p) for p in sorted(SOURCE.rglob('*.md'))]
     posts = sorted((p for p in pages if p['post']), key=lambda p: (p['date'], p['url']), reverse=True)
     groups = {name: [p for p in posts if name in p['categories']] for name in ('Writing', 'Projects')}
@@ -166,10 +220,25 @@ def build():
             source = outputs.get(url.lstrip('/'))
             if not url.startswith('/') or not isinstance(source, Path):
                 raise ValueError(f'{page["source"]}: thumbnail must reference a local PNG asset: {url}')
-            output = BytesIO()
-            dimensions = thumbnail(source, output)
             path = 'thumbnails/' + url.lstrip('/')
-            add(path, output.getvalue())
+            inputs = {'source': source.relative_to(ROOT).as_posix(),
+                      'signature': signature(source), 'width': THUMBNAIL_WIDTH,
+                      'generator': generator}
+            previous = cache['thumbnails'].get(path, {})
+            dimensions = previous.get('dimensions')
+            existing = signature(OUTPUT / path)
+            if (previous.get('inputs') == inputs
+                    and existing is not None and previous.get('output') == existing
+                    and isinstance(dimensions, list) and len(dimensions) == 2
+                    and all(type(value) is int and value > 0 for value in dimensions)):
+                add(path, None)  # Keep the existing thumbnail without decoding it.
+                reused += 1
+            else:
+                output = BytesIO()
+                dimensions = thumbnail(source, output, width=THUMBNAIL_WIDTH)
+                add(path, output.getvalue())
+                generated += 1
+            manifest['thumbnails'][path] = {'inputs': inputs, 'dimensions': dimensions}
             thumbnails[url] = ('/' + path, dimensions)
         page['thumbnail'], page['thumbnail_dimensions'] = thumbnails[url]
 
@@ -234,25 +303,62 @@ def build():
     for name, document in [('atom.xml', feed), ('sitemap.xml', sitemap)]:
         add(name, ET.tostring(document, encoding='unicode', xml_declaration=True))
 
-    # This fixed directory is the only tree the builder is allowed to remove.
-    if OUTPUT.is_symlink() or OUTPUT.resolve() != ROOT / 'public':
-        raise ValueError('public must be a real directory inside the repository')
-    if OUTPUT.exists():
-        shutil.rmtree(OUTPUT)
+    # Validate every destination before modifying existing outputs.
+    for path in outputs:
+        relative = Path(path)
+        if (relative.is_absolute() or '..' in relative.parts
+                or not (OUTPUT / relative).resolve().is_relative_to(OUTPUT.resolve())):
+            raise ValueError(f'output must stay inside public: {path}')
+        if any(parent.as_posix() in outputs for parent in relative.parents if parent != Path('.')):
+            raise ValueError(f'output is both a file and directory: {path}')
+    check_output()
+    # Generation succeeded. Remove obsolete files and empty directories first,
+    # which also permits an old file to become a directory (and vice versa).
+    for directory, folders, files in os.walk(OUTPUT, topdown=False):
+        directory = Path(directory)
+        for name in files:
+            target = directory / name
+            if target.relative_to(OUTPUT).as_posix() not in outputs:
+                target.unlink()
+        for name in folders:
+            target = directory / name
+            if not any(target.iterdir()):
+                target.rmdir()
     for path, content in outputs.items():
         target = OUTPUT / path
         target.parent.mkdir(parents=True, exist_ok=True)
         if isinstance(content, Path):
-            shutil.copyfile(content, target)
-        elif isinstance(content, bytes):
-            target.write_bytes(content)
-        else:
-            target.write_text(content, encoding='utf-8')
+            inputs = {'source': content.relative_to(ROOT).as_posix(), 'signature': signature(content)}
+            previous = cache['assets'].get(path, {})
+            existing = signature(target)
+            if (previous.get('inputs') == inputs and existing is not None
+                    and previous.get('output') == existing):
+                skipped += 1
+            else:
+                shutil.copyfile(content, target)
+                copied += 1
+            manifest['assets'][path] = {'inputs': inputs, 'output': signature(target)}
+        elif content is not None:
+            # Match write_text's platform newline translation used by old builds.
+            data = content if isinstance(content, bytes) else content.replace('\n', os.linesep).encode('utf-8')
+            if force or not target.is_file() or target.read_bytes() != data:
+                target.write_bytes(data)
+    for path, entry in manifest['thumbnails'].items():
+        entry['output'] = signature(OUTPUT / path)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = cache_path.with_suffix('.tmp')
+    temporary.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    temporary.replace(cache_path)
     print(f'Built {len(pages) + 1} pages, {len(posts)} posts, {len(outputs)} files in public/')
+    print(f'Thumbnails: {generated} generated, {reused} reused; '
+          f'assets: {copied} copied, {skipped} skipped; {time.perf_counter() - started:.3f}s')
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--force', action='store_true', help='regenerate all outputs without using the cache')
+    args = parser.parse_args()
     try:
-        build()
+        build(force=args.force)
     except (ValueError, OSError) as error:
         raise SystemExit(str(error)) from error

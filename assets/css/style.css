@@ -203,6 +203,18 @@ a:hover {
 @media screen and (max-width: 740px) {
   #headerinner #main-nav ul li {
     margin-top: 0;
+    margin-left: 0;
+  }
+}
+.dateimageitem {
+  float:right;
+}
+@media screen and (max-width: 740px) {
+  .dateimageitem {
+    float:left;
+  }
+  .dateimagedesc {
+    clear:left;
   }
 }
 article {
