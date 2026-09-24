@@ -252,6 +252,7 @@ Once I'd ported the python algorithm over to the C firmware this allowed the fir
 ![First Walk Test](dogsbod/first_walk.mp4)
 
 As you can see, lots of room for improvement:
+
 - Lack of friction between the legs and the desk
 - The debugger breakout stops it moving along the ground and back again very well
 - No steering
