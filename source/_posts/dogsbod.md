@@ -7,7 +7,7 @@ thumbnail = "dogsbod/dogsbod.png"
 description = "I built a robot dog. This took me on a big adventure across whole new domains: mechanical engineering, 3D printing, robotics, Bluetooth firmware and debugging electronics."
 +++
 
-![Dogsbod v2](dogsbod/dogsbod.png)
+![Dogsbod v1](dogsbod/dogsbod.png)
 
 ## Goal: Build a small, cheap and stupid quadruped robot dog
 
