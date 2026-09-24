@@ -997,3 +997,21 @@ pre .token-register,
 pre .token-variable {
   color: #1f6f8b;
 }
+th,
+td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+th {
+  background: #f5f5f5;
+  font-weight: 600;
+  color: #333;
+}
+tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+tbody tr:hover {
+  background: #f2f6ff;
+}

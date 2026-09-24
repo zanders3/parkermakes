@@ -219,11 +219,13 @@ yval = ((math.cos((t2+0.25)*math.pi*4.0)*0.5)+0.5) if t2 < 0.5 else 0.0
 ```
 
 Which looks like this for the ik target position's `xval` and `yval` over time `t`.
+
 ![IK Leg Animation](dogsbod/leg_animation.png)
 
 The 'ratio' value controls how quickly the leg moves along the ground when the leg is moving forwards. Increasing the ratio spends more time returning the leg to the start position which means less time moving it along the ground.
 
 If you plot the X and Y values over time you end up with this leg motion:
+
 ![IK Leg Path](dogsbod/leg_path.png)
 
 If you run this on all 4 legs then the robot will rock forwards and backwards and not move. To achieve forward and backward movement you offset the starting time `t` relative to each other.
@@ -261,10 +263,36 @@ Let's fix those things next!
 
 Turning is controlled by multiplying the horizontal IK movement (the `xval` in the python maths above) by which side of the body you are on:
 
-| steering | -1.0 | -0.5 | 0.0 | 0.5 | 1.0  |
-|----------|------|------|-----|-----|------|
-| left     | 1.0  | 1.0  | 1.0 | 0.0 | -1.0 |
-| right    | -1.0 | 0.0  | 1.0 | 1.0 | 1.0  |
+<table>
+  <thead>
+    <tr>
+      <th>steering</th>
+      <th>-1.0</th>
+      <th>-0.5</th>
+      <th>0.0</th>
+      <th>0.5</th>
+      <th>1.0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>left</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>-1.0</td>
+    </tr>
+    <tr>
+      <td>right</td>
+      <td>-1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
 
 So now we can control the robot using a single left stick for forward/back and left/right. If you also add a small y offset based on the right stick you can implement leaning as well.
 
@@ -284,11 +312,12 @@ This allowed `btstack` to take full control of the main loop in the rp2040 via t
 
 # Conclusion and what I learned
 
-Here is the final full walking + messing about video!
+Here is the final full walking + messing about video, controlled remotely with a DS4 controller in my hands.
 
-![Dogsbod v1 Walk and Turn Test](dogsbod/dogsbod_walk_full.mp4)
+![Dogsbod v1 Full Test](dogsbod/dogsbod_walk_full.mp4)
 
 What did I learn from this project?
+
 - 4xAA NiMH batteries are definitely not enough power but you can't argue with the budget and safety advantages!
 - Cheap servos are usable but you can quickly hit their torque limits
 - Simulation is a powerful tool that avoids iterating directly on hardware
@@ -296,6 +325,8 @@ What did I learn from this project?
 - Be very **very** careful not to short pins when probing with multimeters; have a plan of action and think through the circuit before acting. Debugging can cause accidental damage which is completely different from software.
 
 What would I improve?
+
 - Fully custom PCB designs for both the debugger and the robot itself
 - Improved leg designs; can we make it look more like an actual leg?
 - Can we move beyond 4xAA batteries to a strong enough power system?
+- Design our own battery holder that mechanically works
