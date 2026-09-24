@@ -4,7 +4,7 @@ date = 2026-03-13
 tags = ["3D printing", "rp2040", "robotics", "highlights"]
 categories = ["Writing"]
 thumbnail = "dogsbod/dogsbod.png"
-description = "I built a robot dog. This took me on a big adventure across whole new domains: mechanical engineering, 3D printing, robotics, PCB design and electronics."
+description = "I built a robot dog. This took me on a big adventure across whole new domains: mechanical engineering, 3D printing, robotics, Bluetooth firmware and debugging electronics."
 +++
 
 ![Dogsbod v2](dogsbod/dogsbod.png)
@@ -13,11 +13,11 @@ description = "I built a robot dog. This took me on a big adventure across whole
 
 How hard could it be?
 
-As it turns out, it is surprisingly difficult! The process ended up with me learning CAD, mechanical engineering, 3D printing, PCB design, PCB manufacturing and electrical engineering. 
-
-Though in the end I did manage to get it walking, controlled with a DS4 controller over Bluetooth:
-
 ![Dogsbod v1 Walk and Turn Test](dogsbod/dogsbod_walknturn.mp4)
+
+As it turns out, it *is* surprisingly difficult! The process required me to learn CAD, mechanical engineering, 3D printing, the Bluetooth protocol and how to actually debug electronics in practice.
+
+In the end I did manage to get it walking, controlled with a DS4 controller over Bluetooth.
 
 Come and join me on an adventure as we learn what it takes to build the simplest, cheapest, stupidest robot dog I can come up with.
 
@@ -25,9 +25,9 @@ Come and join me on an adventure as we learn what it takes to build the simplest
 
 In January I was [inspired](https://www.instructables.com/GoodBoy-3D-Printed-Arduino-Robot-Dog/) by a [bunch of](https://www.instructables.com/ESP32-Small-Robot-Dog/) [projects online](https://www.instructables.com/DogBot-V2-Make-Your-Own-Quadruped-Robot-From-Scrat/) and [various](https://www.youtube.com/watch?v=VhUvoV5XyRg) [YouTube](https://www.youtube.com/watch?v=iXmrPoqd8gs) videos explaining the process of creating a robot dog, and this got me excited enough to want to give it a try myself.
 
-At the time of starting this project I didn't have a 3D printer and I hadn't used CAD software before, though I know how to use Blender really well.
+At the time of starting this project I didn't have a 3D printer and I hadn't used CAD software before.
 
-The idea was to try and build a robot using the cheapest servos I could find, mostly for power and budget reasons, and then try to fit the robot's movement within those limits. I wanted to be able to run the robot from 4xAA batteries because I didn't want to jump straight to high power electronics.
+The idea was to try and build a robot using the cheapest servos I could find, mostly for power and budget reasons, and then try to fit the robot's movement within those limits. I wanted to be able to run the robot from 4xAA batteries because I didn't want to jump straight to high power electronics. Lipo battery fires are scary.
 
 I started out with this very simple BOM:
 
@@ -41,7 +41,7 @@ I started out with this very simple BOM:
 - [Raspberry Pi Pico W](https://thepihut.com/products/raspberry-pi-pico-w)
 - 3D printer filament
 
-I also came up with an initial mass budget of ~20g per leg.
+I also came up with an initial mass budget of ~20g per leg via some very rough/'finger in the air' torque calculations. This is definitely the wrong way to do it but I think it put me in the right order of magnitude.
 ```
 1.8kg/cm torque
 
@@ -68,7 +68,7 @@ Battery pack: 4× AA NiMH in series
     Typical capacity: about 2000–2500 mAh for decent AAs
     In series, voltage adds, capacity stays the same → call it a 2–2.5 Ah, 4.8 V pack
 
-Servos: 8× SG90
+Servos: 8× Miuzei Micro Servos
 
     Rated operating voltage: about 3.5–6 V
     Stall current is 700 mA
@@ -78,14 +78,6 @@ Servos: 8× SG90
 I found the 5-6A result quite worrying, but hoped that if they didn't all stall at the same time it would be ok? I pay for this mistake later on, but I do get further than I expected!
 
 ## CAD Design
-
-I then set about designing the robot in CAD. I initially tried to learn FreeCAD, but bounced off the software. They keep updating it and I keep bouncing off it, but it does seem like FreeCAD development has really progressed this year. I think FreeCAD will win in the end, it currently feels like Blender just before the 2.8 UI overhaul.
-
-So in the end I chose to learn SolidWorks instead.
-
-SolidWorks at its core is great and powerful CAD software. However the '3D experience platform' is obnoxious, and asks you to login every single time you open it. 
-
-Luckily you can still save locally and check that stuff into Git, and again the core CAD software itself is really good.
 
 After a week or so learning SolidWorks I came up with this design:
 
@@ -113,7 +105,7 @@ On the electronics side, I set myself an initial goal of getting the waveshare s
 
 I wired up another Pico I had lying around to act as a [Pico Debugger Probe](https://www.raspberrypi.com/documentation/microcontrollers/debug-probe.html) which makes flashing the firmware significantly less annoying: you can set things up in VS code to the point where mashing F5 compiles, flashes and then attaches the debugger. So you can have full debugging access, which I'm very used to/spoiled with from my game console development experience. Debuggers are a very powerful tool to have available, and are worth fighting for to gain that low level understanding of what's going on.
 
-For that reason it's also really worth spending the time to setup UART so you can print what is going on inside the chip as well. Wiring UART correctly is a complete nightmare, and I always seem to get it the wrong way round. I don't think I'm the only one!
+For that reason it's really worth spending the time to set up UART so you can printf what is going on inside the chip even though wiring UART correctly is a complete nightmare. I always get it the wrong way round.
 
 My first attempt to get the waveshare board to move a servo didn't work, and in the process of figuring out why I accidentally shorted the 5V output and GND together with my multimeter probes. There was a terrifying moment where I saw an arc between the pins and then power to the whole board was lost, which I think was the efuse within my PC's USB ports. Luckily I didn't fry my PC's USB ports or even worse the whole PC itself but I **did** fry the buck converter on the waveshare board.
 
@@ -123,7 +115,7 @@ In the end the problem turned out to be that I'd forgotten to turn on the 'SERVO
 
 As a result I learned it's a great idea to check in the datasheet of every component you own into Git. Don't assume your component's datasheet will be archived for you forever.
 
-The firmware required to drive a servo really is simple. You [wobble the data pin](https://en.wikipedia.org/wiki/Pulse-width_modulation) the servo is connected at the rate that that the servo chip wants you to wobble the pin at. For the Miuzei servos I'm using they want a pulse width modulation (PWM) working pulse width of 500-2500 microseconds.
+The firmware required to drive a servo really is simple. You [wobble the data pin](https://en.wikipedia.org/wiki/Pulse-width_modulation) at the rate the servo chip wants you to wobble the pin at. For the Miuzei servos I'm using they want a pulse width modulation (PWM) working pulse width of 500-2500 microseconds. This code assumes the PWM channels have been configured so each level is one microsecond long:
 ```c
 #include "hardware/pwm.h"
 
@@ -179,7 +171,7 @@ def inverse_kinematics_five_bar(x, y):
 
 The problem with this naive algorithm is that joint limits are not respected, and our servos are limited both by joint angle and the relative position of the legs. We needed to find a way to 'solve' the IK such that the servo angles could not be commanded into an invalid position. I wasn't sure about how strong 3D prints were at the time, so I didn't want to break anything just because I wrote the software wrong!
 
-A valid IK target position is one that can be reached by the leg end points, which in robotics land is called the 'reachable workspace'. This is calculated by taking the dot product of a single pair of leg forward vectors. This visualisation shows if a position is reachable by a two bar linkage:
+A valid IK target position is one that can be reached by the leg end points, which in robotics land is called the 'reachable workspace'. For the two bar linkage I chose to calculate this by taking the dot product of the upper and lower leg forward vectors. This is probably not the most rigorous or academic method but it does appear to work. This visualisation shows which positions are reachable:
 
 ![2 Bar Linkage IK Validity](dogsbod/ik_solver2.png)
 
@@ -214,7 +206,7 @@ With all of this working I was ready to test it on the real thing. I printed one
 
 ## Higher Level Motion Planning
 
-The final goal was to figure out how to make the entire robot move using all four legs, controlled via a DS4 controller over bluetooth. The plan was to put the desired heading rotation and speed on the left stick, and pitch offset on the right stick.
+The final goal was to figure out how to make the entire robot move using all four legs, controlled via a DS4 controller over Bluetooth. The plan was to put the desired heading rotation and speed on the left stick, and pitch offset on the right stick.
 
 One solution to this problem is to effectively run a fixed leg animation on each leg built out of maths:
 ```py
@@ -229,18 +221,16 @@ yval = ((math.cos((t2+0.25)*math.pi*4.0)*0.5)+0.5) if t2 < 0.5 else 0.0
 Which looks like this for the ik target position's `xval` and `yval` over time `t`.
 ![IK Leg Animation](dogsbod/leg_animation.png)
 
-The `ratio` value controls how much time is spent with the leg down moving forward vs time spent raising the leg moving it back to the start position.
-
-This controls how quickly the leg moves along the ground when the leg is moving forwards. If you spend more time returning the leg to the start position then there is less time to move with the foot on ground, therefore the leg is commanded to move faster.
+The 'ratio' value controls how quickly the leg moves along the ground when the leg is moving forwards. Increasing the ratio spends more time returning the leg to the start position which means less time moving it along the ground.
 
 If you plot the X and Y values over time you end up with this leg motion:
 ![IK Leg Path](dogsbod/leg_path.png)
 
-If we simply ran this animation on all 4 legs in the same way then the robot will rock forwards and backwards and not get anywhere. To achieve forward and backward movement you offset the starting time `t` relative to each other.
+If you run this on all 4 legs then the robot will rock forwards and backwards and not move. To achieve forward and backward movement you offset the starting time `t` relative to each other.
 
 This means each leg has two parameters: `offset` and `ratio`. The offset on each leg controls the order in which the legs move, and the simplest approach is to pick a leg ordering that keeps the centre of mass (COM) of the robot inside the 'support polygon' which for this robot is a triangle made out of the legs that are currently touching the ground.
 
-I went with a fixed walking order to keep things simple, even though this isn't optimal. I built a mini 'simulator' in python matplotlib that helped me verify the algorithm without having to iterate in the hardware itself. That gave this result:
+I went with a fixed walking order to keep things simple, even though this isn't optimal. I built a mini 'simulator' in Python/matplotlib that helped me verify the algorithm without having to iterate in the hardware itself. That gave this result:
 
 ![IK Walking](dogsbod/ik_walk.mp4)
 
@@ -250,7 +240,7 @@ Speed is controlled by controlling how quickly the simulation moves forwards/bac
 
 I printed and assembled the final components; the main body, 3 more sets of legs along with the servo controller, servos and battery box. The breadboard in the photos you can see is acting as the pico debugger. 
 
-I was also experimenting with a custom battery box, but the batteries kept falling out because the 3D printed springs were not strong enough! I decided an off the shelf battery box worked better for now.
+I was also experimenting with a custom battery box, but the batteries kept falling out because the 3D printed springs were not strong enough! I decided an off the shelf battery box worked best for now.
 
 ![Build Part 1](dogsbod/dogsbod_build1.png)
 ![Build Part 2](dogsbod/dogsbod_build2.png)
@@ -263,7 +253,7 @@ As you can see, lots of room for improvement:
 - Lack of friction between the legs and the desk
 - The debugger breakout stops it moving along the ground and back again very well
 - No steering
-- No bluetooth control (controlled over UART)
+- No Bluetooth control (controlled over UART)
 
 Let's fix those things next!
 
@@ -278,13 +268,13 @@ Turning is controlled by multiplying the horizontal IK movement (the `xval` in t
 
 So now we can control the robot using a single left stick for forward/back and left/right. If you also add a small y offset based on the right stick you can implement leaning as well.
 
-For the bluetooth controls I wrote my own bluetooth firmware implementation for the DS4 controller which used the [btstack](https://github.com/bluekitchen/btstack) library which can talk to the `CYW43439` chip on board the Pico W.
+For the Bluetooth controls I wrote my own Bluetooth firmware implementation for the DS4 controller which used the [btstack](https://github.com/bluekitchen/btstack) library which can talk to the `CYW43439` chip on board the Pico W.
 
-To do that I had to manually figure out the bluetooth hardware ID of my DS4 controller I had lying around. You can do this by implementing a bluetooth scan and log the IDs you can see over UART.
+To do that I had to manually figure out the Bluetooth hardware ID of my DS4 controller I had lying around. You can do this by implementing a Bluetooth scan and log the IDs you can see over UART.
 
-Once you've paired the controller and have correctly implemented the ack packets the controller expects the controller spams you with bluetooth packets containing the state of the controller. All of this is provided in the `hid_host_register_packet_handler(packet_handler);` callback once you've initialised the library correctly.
+Once you've paired the controller it expects various ack packets. Once these have been sent correctly it spams you with Bluetooth packets containing the state of the pad and buttons. All of this is provided in the `hid_host_register_packet_handler(packet_handler);` callback once you've initialised the `btstack` library correctly.
 
-Once I got that working it was pretty easy to extract the left and right stick states, apply these to the motion algorithm and command the motors to move to that position. To allow the bluetooth firmware to coexist nicely with the motion control I used a `btstack_run_loop` configured to run every 32ms. 
+Once I got that working it was pretty easy to extract the left and right stick states, apply these to the motion algorithm and command the motors to move to that position. To allow the Bluetooth firmware to coexist nicely with the motion control I used a `btstack_run_loop` configured to run every 32ms. 
 ```c
 btstack_run_loop_set_timer(&ik_tick, 32);
 btstack_run_loop_set_timer_handler(&ik_tick, ik_tick_handler);
@@ -292,15 +282,20 @@ btstack_run_loop_add_timer(&ik_tick);
 ```
 This allowed `btstack` to take full control of the main loop in the rp2040 via the `btstack_run_loop_execute()` call.
 
-# Final Walk Test
+# Conclusion and what I learned
 
 Here is the final full walking + messing about video!
 
 ![Dogsbod v1 Walk and Turn Test](dogsbod/dogsbod_walk_full.mp4)
 
-Overall this was a successful project. Yes you can definitely hear the very cheap toy servos struggling to function with the measly 4xAA batteries I gave it, but it works and it stayed within budget. I think overall it hit my goal of building a cheap, small and stupid quadruped robot.
+What did I learn from this project?
+- 4xAA NiMH batteries are definitely not enough power but you can't argue with the budget and safety advantages!
+- Cheap servos are usable but you can quickly hit their torque limits
+- Simulation is a powerful tool that avoids iterating directly on hardware
+- Nothing beats iterating directly with hardware to find weird issues
+- Be very **very** careful not to short pins when probing with multimeters; have a plan of action and think through the circuit before acting. Debugging can cause accidental damage which is completely different from software.
 
-I ended up going in completely new and exciting directions after this but all of the engineering that I got away with in this initial project definitely came back to bite me later. I hope to write up some of these fun things I attempted next:
-- Attempts at printing custom 3D printed PCBs
-- 3D 'print-in-place' ball bearings and gear designs for custom actuators
-- Moving beyond 4xAA batteries
+What would I improve?
+- Fully custom PCB designs for both the debugger and the robot itself
+- Improved leg designs; can we make it look more like an actual leg?
+- Can we move beyond 4xAA batteries to a strong enough power system?
