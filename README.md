@@ -52,7 +52,21 @@ are relative so the output also works under a GitLab project subpath.
 Standalone pages use `source/name/index.md` with a title in TOML front matter.
 The homepage introduction is `source/index.md`. `layout = "home"`,
 `"writing"` and `"projects"` select the three listing layouts.
-Other files under `source/` are copied as static assets.
+
+## Write a custom HTML page
+
+Create an HTML document or fragment such as `source/tools/emoji.html`. The build
+publishes it at `/tools/emoji.html`, merges its `<head>` into the shared head,
+and inserts its body content into `<div id="content" class="inner">`. The shared
+template supplies the document wrappers, navigation and footer. Page-specific
+`<style>` and `<script>` blocks stay in the head or body where you placed them.
+If the head supplies a `<title>`, the build uses it. Otherwise the title comes
+from the filename, or the directory name for an `index.html` page. Relative URLs
+resolve from the published page's directory.
+
+Files under `assets/` and supporting files under `source/` are copied as static assets.
+
+## Markdown features
 
 Markdown supports headings, lists, links, images, fenced and indented code,
 and raw HTML. Image alt text becomes a caption. Labelled C, C++, C#, shell,

@@ -1,0 +1,114 @@
+<!DOCTYPE html><html>
+  <title>Emoji</title>
+<head>
+  <link rel="preload" href="emoji.json" as="fetch" crossorigin>
+  <style>
+  #search {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 480px;
+    padding: 12px 16px 12px 42px;
+    font-size: 16px;
+    font-family: inherit;
+    color: inherit;
+    background-color: transparent;
+    border: 1px solid #aaa;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m16 16 5 5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 12px center;
+  }
+  #search:hover {
+    border-color: #777;
+  }
+  #search:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px #3b82f620;
+  }
+  #search::placeholder {
+    color: #888;
+  }
+  #emoji-contents button {
+    font-size: 32px; cursor: pointer; margin:2px;
+    border-radius: 6px;
+    width:56px; height:56px;
+  }
+  #emoji-contents section {
+    margin-top:12px;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 400px;
+  }
+  #emoji-contents section h2 {
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  }
+</style>
+</head>
+<body>
+<article>
+  <div class="post-content">
+    <input type="text" id="search" placeholder="Search emojis..." />
+    <div id="emoji-contents"></div>
+  </div>
+</article>
+<script type="module">
+  const data = await fetch("emoji.json").then(r => r.json());
+  console.log(data);
+  let searchEl = document.getElementById("search");
+  function matchEmoji(emoji, words) {
+    for (let word of words) {
+      if (emoji.label.includes(word)) {
+        return true;
+      }
+      if (emoji.tags) {
+        for (let tag of emoji.tags) {
+          if (tag.includes(word)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+  function drawEmoji() {
+    let contents = document.createDocumentFragment();
+    let words = searchEl.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    console.log(words);
+    let curGroup = undefined;
+    let section;
+    for (let emoji of data.emoji) {
+      if (words.length > 0 && !matchEmoji(emoji, words)) {
+        continue;
+      }
+      if (!section || curGroup != emoji.group) {
+        curGroup = emoji.group;
+        section = document.createElement("section");
+        if (curGroup !== undefined) {
+          let title = document.createElement("h2");
+          title.innerText = data.groups[curGroup].message;
+          section.appendChild(title);
+        }
+        contents.appendChild(section);
+      }
+      let btn = document.createElement("button");
+      btn.textContent = emoji.emoji;
+      btn.title = emoji.label;
+      btn.onclick = function() {
+        console.log(emoji.emoji);
+        navigator.clipboard.writeText(emoji.emoji);
+      };
+      section.appendChild(btn);
+    }
+    console.log("built");
+    document.getElementById("emoji-contents").replaceChildren(contents);
+  }
+  let timer;
+  searchEl.oninput = function() { 
+    clearTimeout(timer);
+    timer = setTimeout(drawEmoji, 80); 
+  };
+  drawEmoji();
+</script>
+</body></html>

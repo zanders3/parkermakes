@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>$title</title>
+  $page_title
   <meta name="author" content="$author">
   <meta name="description" content="$description">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -12,6 +12,7 @@
   <link rel="alternate" href="/atom.xml" title="$site_title" type="application/atom+xml">
   <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
   <script data-goatcounter="https://parkermakes.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+  $extra_head
 </head>
 <body>
   <header id="header"><div id="headerinner">
@@ -25,9 +26,7 @@
     <div class="clearfix"></div>
   </div></header>
   <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper">$body</div></div>
-    <aside id="sidebar" class="alignright">$sidebar</aside>
-    <div class="clearfix"></div>
+    $content
   </div>
   <footer id="footer"><div id="footerinner">
     <p style="float:right">Built with Python<br>Hosted on <a href="https://docs.gitlab.com/user/project/pages/">GitLab Pages</a></p>

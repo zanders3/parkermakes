@@ -3,6 +3,7 @@ import argparse
 import datetime as dt
 import hashlib
 from html import escape, unescape
+from html.parser import HTMLParser
 from io import BytesIO
 import json
 import os
@@ -162,6 +163,49 @@ def asset_links(html, source, assets):
                   tag, html, flags=re.DOTALL)
 
 
+class CustomPage(HTMLParser):
+    """Extract document sections while preserving the original HTML source."""
+
+    def __init__(self, source):
+        super().__init__(convert_charrefs=False)
+        self.source = source
+        self.line_offsets = [0] + [match.end() for match in re.finditer('\n', source)]
+        self.cursor = 0
+        self.head = []
+        self.body = []
+        self.in_head = False
+        self.has_title = False
+        self.feed(source)
+        self.close()
+        self.current_section.append(source[self.cursor:])
+
+    @property
+    def current_section(self):
+        return self.head if self.in_head else self.body
+
+    def skip_markup(self, length=None):
+        line, column = self.getpos()
+        start = self.line_offsets[line - 1] + column
+        self.current_section.append(self.source[self.cursor:start])
+        self.cursor = start + length if length is not None else self.source.index('>', start) + 1
+
+    def handle_decl(self, decl):
+        if decl.lower().startswith('doctype '):
+            self.skip_markup(len(decl) + 3)
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ('html', 'head', 'body'):
+            self.skip_markup(len(self.get_starttag_text()))
+            self.in_head = tag == 'head'
+        elif tag == 'title' and self.in_head:
+            self.has_title = True
+
+    def handle_endtag(self, tag):
+        if tag in ('html', 'head', 'body'):
+            self.skip_markup()
+            self.in_head = False
+
+
 def date_html(page, linked=False):
     date = page['date']
     month = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split()[date.month - 1]
@@ -233,8 +277,9 @@ def build(force=False):
     highlighted = [p for p in posts if any(tag.lower() == 'highlights' for tag in p.get('tags', []))]
     sidebar = widget('Projects', groups['Projects']) + widget('Writing', groups['Writing'])
     sidebar += '<div class="widget"><h3 class="title"><a href="/archives/">All posts</a></h3></div>'
-    template = Template((ROOT / 'templates/page.html').read_text(encoding='utf-8'))
+    template = (ROOT / 'templates/page.html').read_text(encoding='utf-8')
     outputs = {}
+    html_pages = []
 
     def add(path, content):
         if path in outputs:
@@ -251,7 +296,10 @@ def build(force=False):
     for folder in (ROOT / 'assets', SOURCE):
         for asset in sorted(folder.rglob('*')):
             if asset.is_file() and asset.suffix != '.md' and '_posts' not in asset.relative_to(folder).parts:
-                add(asset.relative_to(folder).as_posix(), asset)
+                if folder == SOURCE and asset.suffix == '.html':
+                    html_pages.append(asset)
+                else:
+                    add(asset.relative_to(folder).as_posix(), asset)
 
     asset_urls = {source.resolve(): '/' + url for url, source in outputs.items()}
     for page in pages:
@@ -290,16 +338,26 @@ def build(force=False):
             thumbnails[url] = ('/' + path, dimensions)
         page['thumbnail'], page['thumbnail_dimensions'] = thumbnails[url]
 
-    def render(url, title, body, description=DESCRIPTION, is_page=False, active_nav=''):
+    def render(url, title, content, description=DESCRIPTION, active_nav='', custom_page=None):
         nav = {name: '' for name in ('home', 'about', 'projects', 'writing')}
         if active_nav:
             nav[active_nav] = ' class="active" aria-current="page"'
-        html = template.substitute(title=escape(title + ' | ' + SUBTITLE if title else SUBTITLE),
-                                   site_title=escape(TITLE), subtitle=escape(SUBTITLE), author=escape(AUTHOR),
-                                   description=escape(description), year=dt.date.today().year,
-                                   canonical=escape(SITE_URL + url), body=body, sidebar='' if is_page else sidebar,
-                                   **{f'nav_{name}': value for name, value in nav.items()})
-        add(url.lstrip('/') + 'index.html', links(html, url))
+        base = url.rsplit('/', 1)[0] + '/'
+        page_template = Template(links(template, base) if custom_page else template)
+        title_text = escape(title + ' | ' + SUBTITLE if title else SUBTITLE)
+        page_title = '' if custom_page and custom_page.has_title else f'<title>{title_text}</title>'
+        extra_head = ''.join(custom_page.head).strip() if custom_page else ''
+        html = page_template.substitute(page_title=page_title, extra_head=extra_head,
+                                        site_title=escape(TITLE), subtitle=escape(SUBTITLE), author=escape(AUTHOR),
+                                        description=escape(description), year=dt.date.today().year,
+                                        canonical=escape(SITE_URL + url), content=content,
+                                        **{f'nav_{name}': value for name, value in nav.items()})
+        add(url.lstrip('/') + ('index.html' if url.endswith('/') else ''), html if custom_page else links(html, base))
+
+    def columns(body, sidebar_content):
+        return (f'<div id="main-col" class="alignleft"><div id="wrapper">{body}</div></div>\n'
+                f'    <aside id="sidebar" class="alignright">{sidebar_content}</aside>\n'
+                '    <div class="clearfix"></div>')
 
     for page in pages:
         layout = page.get('layout', '')
@@ -328,9 +386,23 @@ def build(force=False):
         if page['post']:
             active_nav = next((name.lower() for name in ('Projects', 'Writing')
                                if name in page.get('categories', [])), '')
-        render(page['url'], '' if layout == 'home' else page['title'], body,
-               page.get('description', DESCRIPTION), not page['post'] and not layout, active_nav)
-    render('/archives/', 'All posts', summary('All posts', posts))
+        render(page['url'], '' if layout == 'home' else page['title'],
+               columns(body, sidebar if page['post'] or layout else ''),
+               page.get('description', DESCRIPTION), active_nav)
+    render('/archives/', 'All posts', columns(summary('All posts', posts), sidebar))
+
+    custom_files = set()
+    for path in html_pages:
+        url = '/' + path.relative_to(SOURCE).as_posix()
+        name = path.stem
+        if path.name == 'index.html':
+            url = url.removesuffix('index.html')
+            name = path.parent.name if url != '/' else ''
+        else:
+            custom_files.add(url.lstrip('/'))
+        title = re.sub(r'[-_]+', ' ', name).title()
+        custom_page = CustomPage(path.read_text(encoding='utf-8-sig'))
+        render(url, title, ''.join(custom_page.body), custom_page=custom_page)
 
     feed = ET.Element('feed', xmlns='http://www.w3.org/2005/Atom')
     for tag, value in [('title', TITLE), ('id', SITE_URL + '/'), ('updated', posts[0]['date'].isoformat() + 'T00:00:00Z')]:
@@ -346,8 +418,9 @@ def build(force=False):
         ET.SubElement(entry, 'content', {'type': 'html', 'xml:base': SITE_URL + page['url']}).text = links(page['body'], page['url'], absolute=True)
     sitemap = ET.Element('urlset', xmlns='http://www.sitemaps.org/schemas/sitemap/0.9')
     for path in sorted(outputs):
-        if path.endswith('index.html'):
-            ET.SubElement(ET.SubElement(sitemap, 'url'), 'loc').text = SITE_URL + '/' + path.removesuffix('index.html')
+        if path in custom_files or posixpath.basename(path) == 'index.html':
+            url = path if path in custom_files else path.removesuffix('index.html')
+            ET.SubElement(ET.SubElement(sitemap, 'url'), 'loc').text = SITE_URL + '/' + url
     for name, document in [('atom.xml', feed), ('sitemap.xml', sitemap)]:
         add(name, ET.tostring(document, encoding='unicode', xml_declaration=True))
 
@@ -397,7 +470,7 @@ def build(force=False):
     temporary = cache_path.with_suffix('.tmp')
     temporary.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
     temporary.replace(cache_path)
-    print(f'Built {len(pages) + 1} pages, {len(posts)} posts, {len(outputs)} files in public/')
+    print(f'Built {len(pages) + len(html_pages) + 1} pages, {len(posts)} posts, {len(outputs)} files in public/')
     print(f'Thumbnails: {generated} generated, {reused} reused; '
           f'assets: {copied} copied, {skipped} skipped; {time.perf_counter() - started:.3f}s')
 

@@ -9,4 +9,4 @@ I build and lead teams delivering large scale distributed systems, developer pla
 
 In my free time I love to build and create things, whether that is small game project ideas, custom operating systems, gameboy emulators, custom embedded electronics and even quadruped robots.
 
-You can contact me at [alex@parkermakes.uk](mailto:alex@parkermakes.uk) or find me on [LinkedIn](https://uk.linkedin.com/pub/alex-parker/3a/44/9) and [GitHub](https://github.com/zanders3).
+You can contact me by emailing alex at this website url or find me on [LinkedIn](https://uk.linkedin.com/pub/alex-parker/3a/44/9) and [GitHub](https://github.com/zanders3).
