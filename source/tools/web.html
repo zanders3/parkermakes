@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>Web Dev Utilities</title>
+  <style>
+.editor {
+  display: flex;
+  height: 300px;
+  overflow: hidden;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  transition: border-color 0.2s;
+  resize: vertical;
+}
+.editor:focus-within {
+  border-color: #58a6ff;
+}
+.line-numbers,
+.editor textarea {
+  font-family: Consolas, monospace;
+  font-size: 14px;
+  line-height: 24px;
+  padding: 16px;
+  box-sizing: border-box;
+}
+.line-numbers {
+  min-width: 48px;
+  flex-shrink: 0;
+  text-align: right;
+  color: #6e7681;
+  background: #161b22;
+  border-right: 1px solid #30363d;
+  white-space: pre;
+  overflow: hidden;
+  user-select: none;
+}
+.editor textarea {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: #e6edf3;
+  caret-color: #58a6ff;
+  white-space: pre;
+  overflow: auto;
+  tab-size: 2;
+}
+.editor textarea::placeholder {
+  color: #6e7681;
+}
+.editor textarea::selection {
+  background: #264f78;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+button {
+  padding: 8px 18px;
+  background: #21262d;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  margin:5px;
+}
+button:hover {
+  background: #30363d;
+  border-color: #8b949e;
+}
+button:active {
+  transform: translateY(1px);
+}
+button:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 3px;
+}
+#error {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(248, 81, 73, 0.08);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  border-radius: 6px;
+  color: #f85149;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+#error:empty {
+  display: none;
+}
+input[type="file"] {
+  padding: 8px;
+  box-sizing: border-box;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #8b949e;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+input[type="file"]::file-selector-button {
+  padding: 8px 16px;
+  margin-right: 12px;
+  background: #21262d;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+input[type="file"]:hover {
+  border-color: #8b949e;
+}
+input[type="file"]::file-selector-button:hover {
+  background: #30363d;
+}
+input[type="file"]:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
+}
+  </style>
+  </head>
+  <body>
+  <article>
+  <div class="post-content">
+    <h1>Web Dev Utilities</h1>
+    <div class="editor">
+      <div class="line-numbers" aria-hidden="true">1</div>
+      <textarea
+        id="input"
+        placeholder="Enter text here..."
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        wrap="off"
+        aria-label="Text input"
+      ></textarea>
+    </div>
+    <div id="error"></div>
+    <div id="actions"></div>
+    <input type="file" id="png-input" accept="image/png"> <button id="convert-ico">convert to ico</button>
+    <script>
+const input = document.getElementById('input');
+const lineNumbers = document.querySelector('.line-numbers');
+
+function updateLineNumbers() {
+  const lines = input.value.split('\n').length;
+
+  lineNumbers.textContent = Array.from(
+    { length: lines },
+    (_, i) => i + 1
+  ).join('\n');
+
+  lineNumbers.scrollTop = input.scrollTop;
+}
+
+input.addEventListener('input', updateLineNumbers);
+
+input.addEventListener('scroll', () => {
+  lineNumbers.scrollTop = input.scrollTop;
+});
+
+updateLineNumbers();
+async function hash(algorithm, str) {
+  const bytes = new TextEncoder().encode(str);
+  const digest = await crypto.subtle.digest(algorithm, bytes);
+  return Array.from(new Uint8Array(digest))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+let tools = {
+  "base64 encode": str => btoa(str),
+  "base64 decode": str => atob(str),
+  "url encode": str => encodeURIComponent(str),
+  "url decode": str => decodeURIComponent(str),
+  "unix timestamp": str => {
+    str = str.trim();
+    if (!str) {
+      return Math.floor(Date.now() / 1000).toString();
+    }
+    let d;
+    if (/^-?\d+(\.\d+)?$/.test(str)) {
+      let timestamp = Number(str);
+
+      if (Math.abs(timestamp) < 1e12) {
+        timestamp *= 1000;
+      }
+
+      d = new Date(timestamp);
+    } else if (str.includes("/")) {
+      // UK dates only: DD/MM/YYYY, HH:mm:ss
+      const uk = str.match(
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
+      );
+      if (!uk) throw new Error("Invalid UK date format");
+      const [, day, month, year, h = 0, m = 0, s = 0] = uk.map(Number);
+      d = new Date(year, month - 1, day, h, m, s);
+      // Reject invalid dates instead of allowing rollover
+      if (
+        d.getFullYear() !== year ||
+        d.getMonth() !== month - 1 ||
+        d.getDate() !== day ||
+        h > 23 || m > 59 || s > 59
+      ) {
+        throw new Error("Invalid UK date expect: DD/MM/YYYY, HH:mm:ss");
+      }
+    } else {
+      // ISO and UTC dates
+      d = new Date(str);
+    }
+    if (isNaN(d.getTime())) {
+      throw new Error("Invalid date or timestamp");
+    }
+    return [
+      Math.floor(d.getTime() / 1000),
+      d.toISOString(),
+      d.toUTCString(),
+      d.toLocaleString("en-GB")
+    ].join("\n");
+  },
+  "jwt decoder": str => {
+    const parts = str.trim().split(".");
+    if (parts.length !== 3) {
+      throw new Error("Invalid JWT");
+    }
+    const decode = part => JSON.parse(
+      new TextDecoder().decode(
+        Uint8Array.from(
+          atob(part.replace(/-/g, "+").replace(/_/g, "/")),
+          c => c.charCodeAt(0)
+        )
+      )
+    );
+    return JSON.stringify({
+      header: decode(parts[0]),
+      payload: decode(parts[1]),
+      signature: parts[2]
+    }, null, 2);
+  },
+  "json formatter": str => JSON.stringify(JSON.parse(str), null, 2),
+  "json minifier": str => JSON.stringify(JSON.parse(str)),
+  "json escape": str => JSON.stringify(str).slice(1, -1),
+  "json unescape": str => JSON.parse('"' + str + '"'),
+  "calculate": str => {
+    const lines = str.trimEnd().split("\n");
+    const expression = lines.pop().trim();
+    const result = Function("with (Math) { return (" + expression + "); }")();
+
+    return [...lines, expression + " = " + result, ""].join("\n");
+  },
+  "download time": str => {
+    const lines = str.trimEnd().split("\n");
+    const expression = lines.pop().trim();
+
+    if (!expression || expression.includes("=")) return str;
+
+    const match = expression.match(
+      /^(\d+(?:\.\d+)?)\s*([KMGT]?i?[Bb])\s+over\s+(\d+(?:\.\d+)?)\s*([KMGT]?i?[Bb])(?:ps|\/s)$/i
+    );
+
+    if (!match) {
+      throw new Error("Expected format: 100 GB over 30 Mbps");
+    }
+
+    const [, size, sizeUnit, speed, speedUnit] = match;
+
+    const toBits = (value, unit) => {
+      const power = "KMGT".indexOf(unit[0].toUpperCase()) + 1;
+      const base = unit.toLowerCase().includes("i") ? 1024 : 1000;
+      const multiplier = unit.endsWith("B") ? 8 : 1;
+
+      return Number(value) * base ** power * multiplier;
+    };
+
+    if (Number(speed) <= 0) {
+      throw new Error("Download speed must be greater than zero");
+    }
+
+    let seconds = toBits(size, sizeUnit) / toBits(speed, speedUnit);
+    const parts = [];
+
+    for (const [unit, duration] of [
+      ["d", 86400],
+      ["h", 3600],
+      ["m", 60]
+    ]) {
+      const count = Math.floor(seconds / duration);
+
+      if (count) {
+        parts.push(`${count}${unit}`);
+        seconds -= count * duration;
+      }
+    }
+
+    if (seconds || !parts.length) {
+      parts.push(`${Number(seconds.toFixed(3))}s`);
+    }
+
+    return [...lines, expression + " = " + parts.join(" "), ""].join("\n");
+  },
+  "gzip encode": async str => {
+    const stream = new Blob([str]).stream()
+      .pipeThrough(new CompressionStream("gzip"));
+    const bytes = new Uint8Array(
+      await new Response(stream).arrayBuffer()
+    );
+    return btoa(Array.from(bytes, b => String.fromCharCode(b)).join(""));
+  },
+  "gzip decode": async str => {
+    const bytes = Uint8Array.from(atob(str), c => c.charCodeAt(0));
+    const stream = new Blob([bytes]).stream()
+      .pipeThrough(new DecompressionStream("gzip"));
+    return await new Response(stream).text();
+  },
+  "md5": str => CryptoJS.MD5(str).toString(),
+  "sha1": str => hash("SHA-1", str),
+  "sha256": str => hash("SHA-256", str),
+  "sha512": str => hash("SHA-512", str),
+  "git hash": str => {
+    const bytes = new TextEncoder().encode(str);
+    return hash("SHA-1", `blob ${bytes.length}\0${str}`);
+  },
+  "sort lines": str => str.split("\n").sort().join("\n"),
+  "reverse lines": str => str.split("\n").reverse().join("\n"),
+  "unique lines": str => [...new Set(str.split("\n"))].join("\n"),
+  "ascii table": () => {
+    const controls = [
+      "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL",
+      "BS",  "HT",  "LF",  "VT",  "FF",  "CR",  "SO",  "SI",
+      "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB",
+      "CAN", "EM",  "SUB", "ESC", "FS",  "GS",  "RS",  "US"
+    ];
+    const lines = [
+      "DEC  HEX  OCT  BINARY    CHAR",
+      "---  ---  ---  --------  ----"
+    ];
+    for (let i = 0; i < 128; i++) {
+      const char = i < 32 ? controls[i]
+        : i === 32 ? "SPACE"
+        : i === 127 ? "DEL"
+        : String.fromCharCode(i);
+
+      lines.push([
+        String(i).padStart(3),
+        i.toString(16).toUpperCase().padStart(2, "0").padEnd(3),
+        i.toString(8).padStart(3, "0"),
+        i.toString(2).padStart(8, "0"),
+        char
+      ].join("  "));
+    }
+    return lines.join("\n");
+  },
+  "hex dump": str => {
+    const bytes = Uint8Array.from(atob(str), c => c.charCodeAt(0));
+    const lines = [];
+
+    for (let i = 0; i < bytes.length; i += 16) {
+      const chunk = bytes.slice(i, i + 16);
+
+      const offset = i.toString(16).padStart(8, "0");
+
+      const hex = Array.from(chunk, b =>
+        b.toString(16).padStart(2, "0")
+      );
+
+      const left = hex.slice(0, 8).join(" ").padEnd(23);
+      const right = hex.slice(8).join(" ").padEnd(23);
+
+      const ascii = Array.from(chunk, b =>
+        b >= 32 && b <= 126 ? String.fromCharCode(b) : "."
+      ).join("");
+
+      lines.push(`${offset}  ${left}  ${right}  |${ascii}|`);
+    }
+
+    return lines.join("\n");
+  },
+};
+let content = document.createDocumentFragment();
+for (let name in tools) {
+  let button = document.createElement("button");
+  button.innerText = name;
+  button.onclick = async function() {
+    document.getElementById("error").innerText = "";
+    try {
+      input.value = await tools[name](input.value);
+      saveHistory();
+    } catch (err) {
+      document.getElementById("error").innerText = err;
+    }
+    updateLineNumbers();
+  };
+  content.appendChild(button);
+}
+document.getElementById("actions").replaceChildren(content);
+
+async function pngToIco(file, sizes = [16, 32, 48, 64, 128, 256]) {
+  const image = await createImageBitmap(file);
+  const images = [];
+
+  for (const size of sizes) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingQuality = "high";
+
+    // Preserve aspect ratio and centre the image
+    const scale = Math.min(size / image.width, size / image.height);
+    const w = image.width * scale;
+    const h = image.height * scale;
+
+    ctx.drawImage(image, (size - w) / 2, (size - h) / 2, w, h);
+
+    const blob = await new Promise(resolve =>
+      canvas.toBlob(resolve, "image/png")
+    );
+
+    images.push({
+      size,
+      data: new Uint8Array(await blob.arrayBuffer())
+    });
+  }
+
+  image.close();
+
+  // ICO header and directory
+  const header = new ArrayBuffer(6 + images.length * 16);
+  const view = new DataView(header);
+
+  view.setUint16(0, 0, true);
+  view.setUint16(2, 1, true);
+  view.setUint16(4, images.length, true);
+
+  let offset = header.byteLength;
+
+  images.forEach(({ size, data }, i) => {
+    const pos = 6 + i * 16;
+
+    view.setUint8(pos, size === 256 ? 0 : size);
+    view.setUint8(pos + 1, size === 256 ? 0 : size);
+    view.setUint8(pos + 2, 0);
+    view.setUint8(pos + 3, 0);
+    view.setUint16(pos + 4, 1, true);
+    view.setUint16(pos + 6, 32, true);
+    view.setUint32(pos + 8, data.length, true);
+    view.setUint32(pos + 12, offset, true);
+
+    offset += data.length;
+  });
+
+  return new Blob(
+    [header, ...images.map(img => img.data)],
+    { type: "image/x-icon" }
+  );
+}
+document.getElementById("convert-ico").onclick = async () => {
+  const file = document.getElementById("png-input").files[0];
+  const error = document.getElementById("error");
+
+  error.innerText = "";
+
+  try {
+    if (!file) throw new Error("Select a PNG file first");
+
+    const ico = await pngToIco(file);
+    const url = URL.createObjectURL(ico);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name.replace(/\.png$/i, "") + ".ico";
+    a.click();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    error.innerText = err.message;
+  }
+};
+let undoStack = [];
+let redoStack = [];
+let lastValue = input.value;
+
+function saveHistory() {
+  if (input.value === lastValue) return;
+
+  undoStack.push(lastValue);
+  redoStack = [];
+  lastValue = input.value;
+
+  // Limit history to 100 entries
+  if (undoStack.length > 100) undoStack.shift();
+}
+function undo() {
+  if (!undoStack.length) return;
+
+  redoStack.push(input.value);
+  input.value = undoStack.pop();
+  lastValue = input.value;
+
+  updateLineNumbers();
+}
+function redo() {
+  if (!redoStack.length) return;
+
+  undoStack.push(input.value);
+  input.value = redoStack.pop();
+  lastValue = input.value;
+
+  updateLineNumbers();
+}
+input.addEventListener("input", saveHistory);
+window.addEventListener("keydown", e => {
+  if (!e.ctrlKey && !e.metaKey) return;
+
+  const key = e.key.toLowerCase();
+
+  if (key === "z") {
+    e.preventDefault();
+    e.shiftKey ? redo() : undo();
+  } else if (key === "y") {
+    e.preventDefault();
+    redo();
+  }
+});
+    </script>
+    </div>
+  </article>
+  </body>
+</html>
